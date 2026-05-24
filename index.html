@@ -44,6 +44,9 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  /* Prevent any one-off element (score popup at huge font, wide SVG) from
+     pushing the page width past the viewport on mobile. */
+  html, body { overflow-x: hidden; }
   body {
     background: radial-gradient(ellipse at top, #1a1a3d 0%, #07071a 60%);
     min-height: 100vh;
@@ -488,6 +491,13 @@
     .prompt .name { font-size: 18px; }
     .readout { font-size: 18px; }
     button { padding: 10px 16px; font-size: 12px; }
+    /* Smaller popup so the huge +score line never spills off-screen */
+    #score-popup .pop-main { font-size: 64px; }
+    #score-popup .pop-sub  { font-size: 18px; }
+    /* Re-stack the active panel on mobile so the info-box sits BELOW the
+       calendar instead of above it. */
+    #active-panel { display: flex; flex-direction: column; }
+    #info-box     { order: 99; }
   }
 </style>
 </head>
