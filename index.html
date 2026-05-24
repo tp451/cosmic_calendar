@@ -828,6 +828,7 @@ const ALL_EVENTS = [
   // Required last three — sub-second precision, the very edge of the cosmic year.
   { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 59.806, required: true },
   { name: "World Wide Web released",                 slug: "World_Wide_Web",                                 desc: "Tim Berners-Lee makes the Web public from CERN, turning the internet into something everyone can browse.", month: 12, day: 31, hour: 23, min: 59, sec: 59.920, required: true },
+  { name: "First iPhone — smartphone era begins",    slug: "History_of_the_iPhone",                          desc: "Apple releases the first iPhone. Within a decade, more than a billion people will carry a connected computer in their pocket.", month: 12, day: 31, hour: 23, min: 59, sec: 59.957 },
   { name: "ChatGPT released",                        slug: "ChatGPT",                                        desc: "A general-purpose language model becomes a consumer product, putting AI in front of hundreds of millions.", month: 12, day: 31, hour: 23, min: 59, sec: 59.991, required: true },
 ];
 ALL_EVENTS.forEach(e => { e.hour = e.hour || 0; e.min = e.min || 0; e.sec = e.sec || 0; e.t = dateToT(e.month, e.day, e.hour, e.min, e.sec); });
@@ -845,8 +846,9 @@ function sampleEvents() {
     pool.filter(e => e.month >= 9 && e.month <= 11),                                             // solar system + early life
     pool.filter(e => e.month === 12 && e.day < 30),                                              // pre-Dec-31 biology/evolution
     pool.filter(e => e.month === 12 && (e.day === 30 || (e.day === 31 && e.hour < 23))),         // dinosaurs end / early apes
-    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min < 59),             // recent humans
-    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59),           // last cosmic minute (recorded history)
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min < 59),             // recent humans (final hour)
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59 && e.sec <  59), // final-minute pool (recorded history)
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59 && e.sec >= 59), // extra final-second pool (Modern period, iPhone, …)
   ];
   // Fisher-Yates shuffle — proper uniform random; sort-by-Math.random comparator is biased.
   function shuffle(arr) {
@@ -857,12 +859,12 @@ function sampleEvents() {
     }
     return a;
   }
-  // Pick *fewer* than each bucket holds, so there is genuine randomness even
-  // in the sparse early-universe months. perBucket[1] is capped at 1 so we
-  // never show both Milky-Way events in the same round. The lion's share of
-  // events comes from the last cosmic minute (bucket 6) — that's the whole
-  // point of the cosmic calendar.
-  const perBucket = [1, 1, 2, 2, 1, 1, 4]; // 12, plus the 3 REQUIRED_FINAL = 15 total
+  // Weighted to *showcase the great acceleration* — the closer we get to the
+  // present moment, the denser the events. The first 13.8 billion years
+  // (bucket 0–4) only contribute ~5 events, while the final cosmic minute +
+  // second contribute ~8.
+  //                       early uni · mid uni · solar/life · biology · Dec30/hom · final-hour · final-minute · final-second pool
+  const perBucket =        [1,         1,        1,           1,        2,          2,           3,             1]; // 12, + 3 REQUIRED_FINAL = 15 total
   const picked = [];
   for (let i = 0; i < buckets.length; i++) {
     picked.push(...shuffle(buckets[i]).slice(0, perBucket[i]));
@@ -936,6 +938,22 @@ function playSweep(fStart, fEnd, duration, type='sawtooth', volume=0.1, delay=0)
   osc.connect(gain).connect(ctx.destination);
   osc.start(start);
   osc.stop(start + duration + 0.05);
+}
+// Spacey end-of-game chime — a slowly-arpeggiating major chord with a high
+// shimmer on top. Sine waves only, long releases, all soft.
+function soundComplete() {
+  if (state.muted) return;
+  const ctx = getCtx();
+  if (!ctx) return;
+  // G3, D4, G4, B4, D5, G5 — G major spread across the spectrum
+  const notes = [196.00, 293.66, 392.00, 493.88, 587.33, 783.99];
+  const v = [0.10, 0.08, 0.07, 0.06, 0.06, 0.07];
+  const d = [2.6,  2.4,  2.0,  1.8,  1.6,  1.5];
+  const lag = 0.16; // stagger between notes
+  notes.forEach((f, i) => playTone(f, d[i], 'sine', v[i], i * lag));
+  // A little high shimmer at the end
+  playTone(1175.5, 1.6, 'sine', 0.05, notes.length * lag + 0.05); // D6
+  playTone(1568.0, 1.4, 'sine', 0.04, notes.length * lag + 0.20); // G6
 }
 // Three-pulse rising klaxon. Used for BOTH scale transitions (entering Dec 31
 // clock and entering the final cosmic second).
@@ -1728,6 +1746,7 @@ function showFinalCard() {
   $('final-rank').innerHTML    = `Rank: <strong>${rank}</strong> · ${pct}%`;
   $('final-card').classList.add('show');
   $('why-box').classList.add('show');
+  soundComplete();
 
   // Hide the live controls AND the calendar/clock so the score card and
   // why-box are the only focus. The info-box of the last event remains visible.
