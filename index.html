@@ -80,16 +80,16 @@
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 14px 18px;
+    padding: 10px 16px;
     /* Grid items default to min-width: auto (= min-content); force them to
        allow shrinking so long unbreakable strings inside don't push the panel
        wider than the viewport. */
     min-width: 0;
     overflow-wrap: anywhere;
   }
-  /* The active panel's first child is the info-box; tighten its top padding so
-     the info-box sits closer to the year-overview above it. */
-  .active { padding-top: 6px; }
+  /* Active panel's first visible child is the info-box; tighten the top
+     padding so it sits closer to the year-overview above. */
+  .active { padding-top: 4px; padding-bottom: 8px; }
 
   h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; }
 
@@ -97,7 +97,7 @@
 
   .active .prompt {
     text-align: center;
-    margin: 18px auto 6px;
+    margin: 8px auto 4px;
   }
   .prompt-question {
     color: var(--accent);
@@ -230,13 +230,39 @@
     color: var(--accent-2); font-size: 14px; letter-spacing: 2px;
     text-transform: uppercase; padding-top: 2px;
   }
+  /* Scale-history mini-clocks above the active clock — they "unlock" one by
+     one as the player zooms past day → hour → minute. */
+  #scale-history {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    width: 100%;
+    min-height: 56px; /* reserve space so layout never jumps */
+    align-items: start;
+    justify-items: center;
+  }
+  .mini-clock {
+    display: flex; flex-direction: column; align-items: center;
+    animation: materialize 0.95s cubic-bezier(0.18, 0.7, 0.22, 1) both;
+  }
+  .mini-svg { width: 38px; height: 38px; display: block; }
+  .mini-face   { fill: var(--panel); stroke: var(--line); stroke-width: 0.6; }
+  .mini-fill   { fill: rgba(255, 122, 89, 0.22); stroke: var(--accent-2); stroke-width: 0.6; }
+  .mini-tick   { stroke: var(--ink-dim); }
+  .mini-hand   { stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; }
+  .mini-center { fill: var(--accent); }
+  .mini-clock-label {
+    font-size: 9px; color: var(--ink-dim);
+    letter-spacing: 1.6px; margin-top: 2px;
+  }
+  @media (max-width: 720px) { #scale-history { display: none; } }
   /* For the materialise/scale animation on the clock SVG to spin from centre. */
   #clock-svg { transform-origin: center; transform-box: fill-box; }
 
   .readout {
     text-align: center;
     font-size: 22px;
-    margin: 16px 0 8px;
+    margin: 6px 0 4px;
     font-variant-numeric: tabular-nums;
     color: var(--accent);
     letter-spacing: 1px;
@@ -246,7 +272,7 @@
   }
 
   .controls {
-    margin: 4px 0 14px;
+    margin: 4px 0 8px;
   }
   .slider-row {
     display: flex; align-items: center; gap: 8px;
@@ -289,7 +315,7 @@
 
   .button-row {
     display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-    margin-top: 6px; margin-bottom: 14px;
+    margin-top: 4px; margin-bottom: 8px;
   }
   button {
     background: var(--accent); color: #2a1a00;
@@ -307,8 +333,8 @@
 
   .info-box {
     display: none;
-    margin-top: 16px;
-    padding: 14px;
+    margin-top: 8px;
+    padding: 10px 12px;
     background: var(--panel-2);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -350,7 +376,7 @@
   .info-result .row { display: flex; gap: 10px; padding: 3px 0; align-items: baseline; }
   .info-result .row .lbl { color: var(--ink-dim); min-width: 80px; }
   .info-result .row .val { flex: 1; font-variant-numeric: tabular-nums; }
-  .info-result .row .ago { color: var(--ink-dim); text-align: right; font-variant-numeric: tabular-nums; }
+  .info-result .row .ago { text-align: right; font-variant-numeric: tabular-nums; }
   .info-result .row.guess { color: var(--accent-2); }
   .info-result .row.truth { color: var(--good); }
   .info-result .delta {
@@ -625,8 +651,9 @@
     </div>
 
     <div class="viz fade-init" id="viz">
-      <svg id="calendar-svg" viewBox="0 0 800 420"></svg>
+      <svg id="calendar-svg" viewBox="0 0 800 320"></svg>
       <div id="clock-wrap">
+        <div id="scale-history" aria-hidden="true"></div>
         <svg id="clock-svg" viewBox="0 0 220 220"></svg>
         <div class="clock-caption">December 31 · 24 hours</div>
       </div>
@@ -832,8 +859,10 @@ function sampleEvents() {
   }
   // Pick *fewer* than each bucket holds, so there is genuine randomness even
   // in the sparse early-universe months. perBucket[1] is capped at 1 so we
-  // never show both Milky-Way events in the same round.
-  const perBucket = [1, 1, 2, 2, 1, 1, 1]; // 9, plus the 3 REQUIRED_FINAL = 12 total
+  // never show both Milky-Way events in the same round. The lion's share of
+  // events comes from the last cosmic minute (bucket 6) — that's the whole
+  // point of the cosmic calendar.
+  const perBucket = [1, 1, 2, 2, 1, 1, 4]; // 12, plus the 3 REQUIRED_FINAL = 15 total
   const picked = [];
   for (let i = 0; i < buckets.length; i++) {
     picked.push(...shuffle(buckets[i]).slice(0, perBucket[i]));
@@ -1029,12 +1058,12 @@ const scorePopup = $('score-popup');
 // ============================================================================
 // Calendar (4 cols × 3 rows of months)
 // ============================================================================
-const CAL_W = 800, CAL_H = 420;
-const CAL_PAD = 8;
+const CAL_W = 800, CAL_H = 320;
+const CAL_PAD = 5;
 const CAL_COLS = 4, CAL_ROWS = 3;
-const CELL_W = (CAL_W - CAL_PAD * 2) / CAL_COLS;     // 196
-const CELL_H = (CAL_H - CAL_PAD * 2) / CAL_ROWS;     // 134.67
-const HEADER_H = 22;
+const CELL_W = (CAL_W - CAL_PAD * 2) / CAL_COLS;     // 197.5
+const CELL_H = (CAL_H - CAL_PAD * 2) / CAL_ROWS;     // 103.33
+const HEADER_H = 18;
 const DAY_COLS = 7, DAY_ROWS = 5;
 const DAY_PAD_X = 8, DAY_PAD_Y = 4;
 const DAY_W = (CELL_W - DAY_PAD_X * 2) / DAY_COLS;   // ~25.7
@@ -1241,7 +1270,83 @@ function drawClock() {
       void el.offsetWidth;
       el.classList.add('materialize');
     }
+    drawScaleHistory(scale);
   }
+}
+
+// Tiny "you've zoomed past these scales" badges. Day appears once we're past
+// the 24-hour view, Hour once we're past 60-minute, Minute once we're past
+// 60-second. The active scale is always the BIG clock below; the minis are
+// the breadcrumbs. The deeper the current zoom, the fuller each older mini —
+// e.g. in the final-second scale the DAY mini is 86399/86400 ≈ fully complete.
+function drawScaleHistory(scale) {
+  const sh = document.getElementById('scale-history');
+  if (!sh) return;
+  const passed = [];
+  if (scale.kind === 'hour' || scale.kind === 'minute' || scale.kind === 'second') {
+    passed.push({ kind: 'day',    fillFrac:  scale.start / 86400 });
+  }
+  if (scale.kind === 'minute' || scale.kind === 'second') {
+    passed.push({ kind: 'hour',   fillFrac: (scale.start - 82800) / 3600 });
+  }
+  if (scale.kind === 'second') {
+    passed.push({ kind: 'minute', fillFrac: (scale.start - 86340) /   60 });
+  }
+  sh.innerHTML = passed.map(p => miniClockMarkup(p.kind, p.fillFrac)).join('');
+}
+function miniClockMarkup(kind, fillFrac) {
+  // Each mini shows the fraction of its scale that had elapsed at the moment
+  // we zoomed deeper. The fraction is supplied by drawScaleHistory so that
+  // bigger scales (Day) end up *more* filled than smaller ones (Minute) once
+  // we're deep enough — e.g. the DAY mini is virtually full when SECOND is
+  // the active scale.
+  const cfg = {
+    day:    { ticks: 24, majorEvery: 6,  label: 'DAY'  },
+    hour:   { ticks: 60, majorEvery: 15, label: 'HOUR' },
+    minute: { ticks: 60, majorEvery: 15, label: 'MIN'  },
+  }[kind];
+  // Clamp into a slice that draws cleanly — exactly 1.0 would close the arc.
+  const frac = Math.max(0.001, Math.min(0.9999, fillFrac));
+  cfg.fillFrac = frac;
+  const cx = 20, cy = 20, r = 17;
+
+  // Filled wedge (= elapsed portion of this scale, mirroring the big clock).
+  const endAng = cfg.fillFrac * 2 * Math.PI - Math.PI / 2;
+  const ex = (cx + Math.cos(endAng) * (r - 2)).toFixed(2);
+  const ey = (cy + Math.sin(endAng) * (r - 2)).toFixed(2);
+  const large = cfg.fillFrac > 0.5 ? 1 : 0;
+  const wedge = `<path d="M ${cx} ${cy} L ${cx} ${cy - (r - 2)} A ${r - 2} ${r - 2} 0 ${large} 1 ${ex} ${ey} Z" class="mini-fill"/>`;
+
+  // Tick marks
+  let ticks = '';
+  for (let i = 0; i < cfg.ticks; i++) {
+    const major = (i % cfg.majorEvery) === 0;
+    const ang = (i / cfg.ticks) * 2 * Math.PI - Math.PI / 2;
+    const inner = r - (major ? 3 : 1.5);
+    const outer = r;
+    const x1 = (cx + Math.cos(ang) * inner).toFixed(1);
+    const y1 = (cy + Math.sin(ang) * inner).toFixed(1);
+    const x2 = (cx + Math.cos(ang) * outer).toFixed(1);
+    const y2 = (cy + Math.sin(ang) * outer).toFixed(1);
+    ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="mini-tick" stroke-width="${major ? 0.7 : 0.3}"/>`;
+  }
+
+  // Hand at the boundary position (same accent gold as the big clock's hand).
+  const hx = (cx + Math.cos(endAng) * (r - 4)).toFixed(2);
+  const hy = (cy + Math.sin(endAng) * (r - 4)).toFixed(2);
+  const hand =
+    `<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" class="mini-hand"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="1.4" class="mini-center"/>`;
+
+  return `<div class="mini-clock">
+    <svg viewBox="0 0 40 40" class="mini-svg">
+      <circle cx="${cx}" cy="${cy}" r="${r}" class="mini-face"/>
+      ${wedge}
+      ${ticks}
+      ${hand}
+    </svg>
+    <div class="mini-clock-label">${cfg.label}</div>
+  </div>`;
 }
 
 // ============================================================================
@@ -1624,12 +1729,13 @@ function showFinalCard() {
   $('final-card').classList.add('show');
   $('why-box').classList.add('show');
 
-  // Hide the live controls but keep the calendar, the clock, and the info-box
-  // of the last event on screen so the player can still see what they just placed.
+  // Hide the live controls AND the calendar/clock so the score card and
+  // why-box are the only focus. The info-box of the last event remains visible.
   $('prompt').style.display     = 'none';
   $('readout').style.display    = 'none';
   $('controls').style.display   = 'none';
   $('button-row').style.display = 'none';
+  $('viz').style.display        = 'none';
 
   drawOverview();
   $('final-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
