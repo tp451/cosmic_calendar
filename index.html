@@ -255,7 +255,29 @@
     font-size: 9px; color: var(--ink-dim);
     letter-spacing: 1.6px; margin-top: 2px;
   }
-  @media (max-width: 720px) { #scale-history { display: none; } }
+  @media (max-width: 720px) {
+    /* On mobile, stack the minis vertically to the LEFT of the main clock
+       instead of in a row above it, so vertical space is conserved. */
+    #clock-wrap {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    #scale-history {
+      display: flex;
+      flex-direction: column;
+      width: auto;
+      min-height: 0;
+      gap: 6px;
+    }
+    .mini-svg { width: 32px; height: 32px; }
+    .mini-clock-label { font-size: 8px; letter-spacing: 1.2px; }
+    /* Caption wraps onto its own line ABOVE the clock + minis row
+       (order:-1 puts it first within the flex container). */
+    .clock-caption { flex-basis: 100%; text-align: center; order: -1; }
+  }
   /* For the materialise/scale animation on the clock SVG to spin from centre. */
   #clock-svg { transform-origin: center; transform-box: fill-box; }
 
@@ -377,8 +399,9 @@
   .info-result .row .lbl { color: var(--ink-dim); min-width: 80px; }
   .info-result .row .val { flex: 1; font-variant-numeric: tabular-nums; }
   .info-result .row .ago { text-align: right; font-variant-numeric: tabular-nums; }
-  .info-result .row.guess { color: var(--accent-2); }
-  .info-result .row.truth { color: var(--good); }
+  .info-result .row.guess         { color: var(--accent-2); }
+  .info-result .row.guess-correct { color: var(--good); }
+  .info-result .row.truth         { color: var(--good); }
   .info-result .delta {
     text-align: center; margin-top: 6px; padding-top: 6px;
     border-top: 1px solid var(--line); color: var(--accent);
@@ -411,7 +434,8 @@
     letter-spacing: 1px;
   }
   #score-popup.show { animation: popup 1.5s ease-out forwards; }
-  #score-popup.low .pop-main { color: var(--bad); text-shadow: 0 0 30px rgba(255,107,107,0.7); }
+  #score-popup.low  .pop-main { color: var(--bad);  text-shadow: 0 0 30px rgba(255, 107, 107, 0.7); }
+  #score-popup.perfect .pop-main { color: var(--good); text-shadow: 0 0 30px rgba(102, 224, 143, 0.9), 0 0 60px rgba(102, 224, 143, 0.4); }
   @keyframes popup {
     0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
     14%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
@@ -727,17 +751,65 @@ function calendarYearTag(yearsAgo) {
   const yearNum = CURRENT_YEAR - Math.round(yearsAgo);
   return yearNum > 0 ? `${yearNum} CE` : `${1 - yearNum} BCE`;
 }
-function formatRealYearsAgo(t) {
+// `opts.historicalYear` (integer; negative = BCE, positive = CE) overrides the
+// cosmic-position-derived year, so the displayed "Actual" reads the event's
+// real historical year (e.g. "4 BCE" for Jesus) — independent of how coarsely
+// the slider can pin a cosmic second.
+// `opts.precise` shows "(YYYY CE/BCE)" derived from the cosmic position. We
+// only set this for fine-resolution scales (final-second).
+// Year display *anchored* to the current event's real historical year. As the
+// player slides, the year ticks off by exactly 437.5 years per cosmic second
+// from the truth's year — so when the slider lands on the right cosmic second
+// the displayed year IS the event's real year. For events without a
+// historicalYear (deep-time events like Hominids), falls back to the
+// position-derived display.
+function formatYearAtPosition(t, ev) {
+  if (!ev || ev.historicalYear == null) {
+    return formatRealYearsAgo(t, { precise: isFinalSecondEvent(ev) });
+  }
+  const yearOffset = (t - ev.t) * COSMIC_YEAR_SECONDS * REAL_YEARS_PER_COSMIC_SECOND;
+  const displayYear = ev.historicalYear + yearOffset;
+  const yearInt = Math.round(displayYear);
+  const tag = yearInt > 0 ? `${yearInt} CE` : `${-yearInt} BCE`;
+  const yearsAgo = CURRENT_YEAR - displayYear;
+  // Strip trailing ".0" when the value happens to be a whole number — so the
+  // readout reads "35 years ago" rather than "35.0 years ago".
+  const trim = n => parseFloat(n.toString());
+  let base;
+  if (yearsAgo >= 1e3)       base = `${trim((yearsAgo / 1e3).toFixed(1))} thousand years ago`;
+  else if (yearsAgo >= 100)  base = `${Math.round(yearsAgo)} years ago`;
+  else if (yearsAgo >= 1)    base = `${trim(yearsAgo.toFixed(1))} years ago`;
+  else if (yearsAgo > 0.005) base = `${trim(yearsAgo.toFixed(2))} years ago`;
+  else                       base = 'today';
+  return `${base} (${tag})`;
+}
+function formatRealYearsAgo(t, opts = {}) {
+  // Backward-compat: old signature passed a boolean for `precise`.
+  if (typeof opts === 'boolean') opts = { precise: opts };
+  const trim = n => parseFloat(n.toString());
+  // If a historical year was supplied, use it verbatim.
+  if (opts.historicalYear != null) {
+    const y = opts.historicalYear;
+    const yearsAgo = CURRENT_YEAR - y;
+    let base;
+    if (yearsAgo >= 1e3)        base = `${trim((yearsAgo / 1e3).toFixed(1))} thousand years ago`;
+    else if (yearsAgo >= 100)   base = `${Math.round(yearsAgo)} years ago`;
+    else if (yearsAgo >= 1)     base = `${trim(yearsAgo.toFixed(1))} years ago`;
+    else                        base = 'today';
+    // Historical convention: no year zero. -4 means "4 BCE", 2022 means "2022 CE".
+    const tag = y > 0 ? `${y} CE` : `${-y} BCE`;
+    return `${base} (${tag})`;
+  }
   const yearsAgo = Math.max(0, (1 - t) * REAL_YEARS_TOTAL);
   let base;
-  // Finer precision at small scales so every slider step visibly changes the readout.
-  if (yearsAgo >= 1e9)      base = `${(yearsAgo / 1e9).toFixed(2)} billion years ago`;
-  else if (yearsAgo >= 1e6) base = `${(yearsAgo / 1e6).toFixed(1)} million years ago`;
-  else if (yearsAgo >= 1e3) base = `${(yearsAgo / 1e3).toFixed(1)} thousand years ago`;
-  else if (yearsAgo >= 100) base = `${Math.round(yearsAgo)} years ago`;
-  else if (yearsAgo >= 1)   base = `${yearsAgo.toFixed(1)} years ago`;
-  else if (yearsAgo >= 0.05) base = `${yearsAgo.toFixed(2)} years ago`;
-  else                       base = 'today';
+  if (yearsAgo >= 1e9)        base = `${trim((yearsAgo / 1e9).toFixed(2))} billion years ago`;
+  else if (yearsAgo >= 1e6)   base = `${trim((yearsAgo / 1e6).toFixed(1))} million years ago`;
+  else if (yearsAgo >= 1e3)   base = `${trim((yearsAgo / 1e3).toFixed(1))} thousand years ago`;
+  else if (yearsAgo >= 100)   base = `${Math.round(yearsAgo)} years ago`;
+  else if (yearsAgo >= 1)     base = `${trim(yearsAgo.toFixed(1))} years ago`;
+  else if (yearsAgo >= 0.05)  base = `${trim(yearsAgo.toFixed(2))} years ago`;
+  else                        base = 'today';
+  if (!opts.precise) return base;
   const tag = calendarYearTag(yearsAgo);
   return tag ? `${base} (${tag})` : base;
 }
@@ -799,37 +871,43 @@ const ALL_EVENTS = [
   { name: "Last glacial period begins",              slug: "Last_Glacial_Period",                            desc: "Huge ice sheets advance across the northern continents.",                                                month: 12, day: 31, hour: 23, min: 55 },
   { name: "First sculptures",                        slug: "Venus_figurines",                                desc: "Humans begin to carve small figurines from bone, ivory and stone.",                                      month: 12, day: 31, hour: 23, min: 58 },
   { name: "First cave paintings",                    slug: "Cave_painting",                                  desc: "People begin to paint animals and hands on the walls of deep caves.",                                    month: 12, day: 31, hour: 23, min: 58 },
-  { name: "Invention of agriculture",                slug: "Agriculture",                                    desc: "People stop wandering and begin to farm wheat, barley, and rice.",                                       month: 12, day: 31, hour: 23, min: 59, sec: 32 },
-  { name: "End of the last Ice Age",                 slug: "Holocene",                                       desc: "The ice sheets retreat, sea levels rise, and the climate becomes mild.",                                 month: 12, day: 31, hour: 23, min: 59, sec: 33 },
-  { name: "Flooding of Doggerland",                  slug: "Doggerland",                                     desc: "Rising seas swallow the land bridge that once joined Britain to mainland Europe.",                       month: 12, day: 31, hour: 23, min: 59, sec: 41 },
-  { name: "Chalcolithic begins",                     slug: "Copper",                                         desc: "People start working with copper alongside their stone tools.",                                          month: 12, day: 31, hour: 23, min: 59, sec: 46 },
-  { name: "Early Bronze Age begins",                 slug: "Bronze_Age",                                     desc: "People begin smelting tin and copper into bronze, the first useful alloy.",                              month: 12, day: 31, hour: 23, min: 59, sec: 47 },
-  { name: "Proto-writing",                           slug: "Proto-writing",                                  desc: "The first symbol systems begin to record numbers, goods and names.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 47 },
-  { name: "Early Egyptian dynasties",                slug: "Early_Dynastic_Period_(Egypt)",                  desc: "Upper and Lower Egypt unite under the first pharaohs along the Nile.",                                   month: 12, day: 31, hour: 23, min: 59, sec: 48 },
-  { name: "Indus Valley civilisation",               slug: "Indus_Valley_Civilisation",                      desc: "Planned cities rise along the Indus river, with sewers, baths and standardised bricks.",                 month: 12, day: 31, hour: 23, min: 59, sec: 48 },
-  { name: "First alphabets",                         slug: "Proto-Sinaitic_script",                          desc: "Symbols start standing for individual sounds rather than whole words.",                                  month: 12, day: 31, hour: 23, min: 59, sec: 49 },
-  { name: "Invention of the wheel",                  slug: "Wheel",                                          desc: "Wheeled vehicles begin to move goods, soldiers, and ideas faster than ever before.",                     month: 12, day: 31, hour: 23, min: 59, sec: 49 },
-  { name: "Akkadian Empire",                         slug: "Akkadian_Empire",                                desc: "Sargon of Akkad welds Mesopotamian city-states into the world's first empire.",                          month: 12, day: 31, hour: 23, min: 59, sec: 49 },
-  { name: "Code of Hammurabi",                       slug: "Code_of_Hammurabi",                              desc: "The Babylonian king Hammurabi writes one of the earliest known law codes.",                              month: 12, day: 31, hour: 23, min: 59, sec: 51 },
-  { name: "Late Bronze Age collapse",                slug: "Late_Bronze_Age_collapse",                       desc: "A web of Bronze-Age civilisations collapses almost simultaneously.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 52 },
-  { name: "Iron Age begins",                         slug: "Phoenicia",                                      desc: "Iron tools become widespread; the Phoenicians spread an alphabet across the Mediterranean.",             month: 12, day: 31, hour: 23, min: 59, sec: 53 },
-  { name: "Classical antiquity begins",              slug: "Classical_antiquity",                            desc: "Greek and Persian cultures lay the foundations of European philosophy, science and art.",                month: 12, day: 31, hour: 23, min: 59, sec: 53 },
-  { name: "Buddha is born",                          slug: "Gautama_Buddha",                                 desc: "Siddhartha Gautama is born in what is now Nepal. He will found a way of thinking that reshapes Asia.",   month: 12, day: 31, hour: 23, min: 59, sec: 54 },
-  { name: "Confucius is born",                       slug: "Confucius",                                      desc: "The Chinese philosopher Kong Fuzi is born. His ethics of harmony, family and ritual will shape East Asia.", month: 12, day: 31, hour: 23, min: 59, sec: 54 },
-  { name: "Classical Greece",                        slug: "Classical_Greece",                               desc: "Athens, Plato and Aristotle set patterns that European thought will keep returning to.",                 month: 12, day: 31, hour: 23, min: 59, sec: 54 },
-  { name: "Roman Empire founded",                    slug: "Roman_Empire",                                   desc: "Augustus becomes the first emperor; Rome will rule the Mediterranean basin for centuries.",              month: 12, day: 31, hour: 23, min: 59, sec: 55 },
-  { name: "Jesus is born",                           slug: "Jesus",                                          desc: "A Jewish preacher is born in Roman-occupied Judea. The movement around him becomes Christianity.",        month: 12, day: 31, hour: 23, min: 59, sec: 55 },
-  { name: "Invention of zero",                       slug: "Bakhshali_manuscript",                           desc: "Indian mathematicians give the number zero its modern form, transforming arithmetic.",                   month: 12, day: 31, hour: 23, min: 59, sec: 55 },
-  { name: "Muhammad is born",                        slug: "Muhammad",                                       desc: "Muhammad is born in Mecca. He will found Islam, which spreads rapidly across three continents.",          month: 12, day: 31, hour: 23, min: 59, sec: 56 },
-  { name: "Maya civilisation peaks",                 slug: "Maya_civilization",                              desc: "The Maya build vast stone cities, develop hieroglyphic writing and astonishingly precise astronomy.",     month: 12, day: 31, hour: 23, min: 59, sec: 56 },
-  { name: "Mongol Empire founded",                   slug: "Mongol_Empire",                                  desc: "Genghis Khan unites the steppe tribes; his successors build the largest contiguous empire in history.",  month: 12, day: 31, hour: 23, min: 59, sec: 58 },
-  { name: "European Renaissance begins",             slug: "Renaissance",                                    desc: "Art, science and humanist thought blossom across Italy and then all of Europe.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58 },
-  { name: "Modern period of history begins",         slug: "Age_of_Discovery",                               desc: "Printing presses, gunpowder, global navigation — the modern world takes shape.",                         month: 12, day: 31, hour: 23, min: 59, sec: 59 },
-  // Required last three — sub-second precision, the very edge of the cosmic year.
-  { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 59.806, required: true },
-  { name: "World Wide Web released",                 slug: "World_Wide_Web",                                 desc: "Tim Berners-Lee makes the Web public from CERN, turning the internet into something everyone can browse.", month: 12, day: 31, hour: 23, min: 59, sec: 59.920, required: true },
-  { name: "First iPhone — smartphone era begins",    slug: "History_of_the_iPhone",                          desc: "Apple releases the first iPhone. Within a decade, more than a billion people will carry a connected computer in their pocket.", month: 12, day: 31, hour: 23, min: 59, sec: 59.957 },
-  { name: "ChatGPT released",                        slug: "ChatGPT",                                        desc: "A general-purpose language model becomes a consumer product, putting AI in front of hundreds of millions.", month: 12, day: 31, hour: 23, min: 59, sec: 59.991, required: true },
+  // Final-minute events — sec is an integer cosmic second (slider step = 1
+  // sec, so the player can always land on the right one). `historicalYear` is
+  // the actual historical year of the event, used directly when we display
+  // the "Actual" answer so the displayed CE/BCE is real, not derived from the
+  // coarse cosmic position.
+  { name: "Invention of agriculture",                slug: "Agriculture",                                    desc: "People stop wandering and begin to farm wheat, barley, and rice.",                                       month: 12, day: 31, hour: 23, min: 59, sec: 32, historicalYear: -10000 },
+  { name: "End of the last Ice Age",                 slug: "Holocene",                                       desc: "The ice sheets retreat, sea levels rise, the climate becomes mild.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 33, historicalYear:  -9700 },
+  { name: "Flooding of Doggerland",                  slug: "Doggerland",                                     desc: "Rising seas swallow the land bridge that once joined Britain to mainland Europe.",                       month: 12, day: 31, hour: 23, min: 59, sec: 41, historicalYear:  -6200 },
+  { name: "Chalcolithic begins",                     slug: "Copper",                                         desc: "People start working with copper alongside their stone tools.",                                          month: 12, day: 31, hour: 23, min: 59, sec: 45, historicalYear:  -4500 },
+  { name: "Early Bronze Age begins",                 slug: "Bronze_Age",                                     desc: "People begin smelting tin and copper into bronze, the first useful alloy.",                              month: 12, day: 31, hour: 23, min: 59, sec: 47, historicalYear:  -3300 },
+  { name: "Proto-writing",                           slug: "Proto-writing",                                  desc: "The first symbol systems begin to record numbers, goods and names.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 47, historicalYear:  -3500 },
+  { name: "Early Egyptian dynasties",                slug: "Early_Dynastic_Period_(Egypt)",                  desc: "Upper and Lower Egypt unite under the first pharaohs along the Nile.",                                   month: 12, day: 31, hour: 23, min: 59, sec: 48, historicalYear:  -3100 },
+  { name: "Indus Valley civilisation",               slug: "Indus_Valley_Civilisation",                      desc: "Planned cities rise along the Indus river, with sewers, baths and standardised bricks.",                 month: 12, day: 31, hour: 23, min: 59, sec: 49, historicalYear:  -2600 },
+  { name: "Akkadian Empire",                         slug: "Akkadian_Empire",                                desc: "Sargon of Akkad welds Mesopotamian city-states into the world's first empire.",                          month: 12, day: 31, hour: 23, min: 59, sec: 50, historicalYear:  -2334 },
+  { name: "First alphabets",                         slug: "Proto-Sinaitic_script",                          desc: "Symbols begin standing for individual sounds rather than whole words.",                                  month: 12, day: 31, hour: 23, min: 59, sec: 51, historicalYear:  -1850 },
+  { name: "Code of Hammurabi",                       slug: "Code_of_Hammurabi",                              desc: "The Babylonian king Hammurabi writes one of the earliest known law codes.",                              month: 12, day: 31, hour: 23, min: 59, sec: 51, historicalYear:  -1750 },
+  { name: "Late Bronze Age collapse",                slug: "Late_Bronze_Age_collapse",                       desc: "A web of Bronze-Age civilisations collapses almost simultaneously.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 52, historicalYear:  -1200 },
+  { name: "Iron Age begins",                         slug: "Phoenicia",                                      desc: "Iron tools become widespread; the Phoenicians spread an alphabet across the Mediterranean.",              month: 12, day: 31, hour: 23, min: 59, sec: 53, historicalYear:  -1200 },
+  { name: "Classical antiquity begins",              slug: "Classical_antiquity",                            desc: "Greek and Persian cultures lay the foundations of European philosophy, science and art.",                month: 12, day: 31, hour: 23, min: 59, sec: 53, historicalYear:   -800 },
+  { name: "Buddha is born",                          slug: "Gautama_Buddha",                                 desc: "Siddhartha Gautama is born in what is now Nepal. He will found a way of thinking that reshapes Asia.",   month: 12, day: 31, hour: 23, min: 59, sec: 54, historicalYear:   -563 },
+  { name: "Confucius is born",                       slug: "Confucius",                                      desc: "The Chinese philosopher Kong Fuzi is born. His ethics will shape East Asia for millennia.",               month: 12, day: 31, hour: 23, min: 59, sec: 54, historicalYear:   -551 },
+  { name: "Classical Greece",                        slug: "Classical_Greece",                               desc: "Athens, Plato and Aristotle set patterns European thought keeps returning to.",                          month: 12, day: 31, hour: 23, min: 59, sec: 54, historicalYear:   -450 },
+  { name: "Roman Empire founded",                    slug: "Roman_Empire",                                   desc: "Augustus becomes the first emperor; Rome will rule the Mediterranean for centuries.",                   month: 12, day: 31, hour: 23, min: 59, sec: 55, historicalYear:    -27 },
+  { name: "Jesus is born",                           slug: "Jesus",                                          desc: "A Jewish preacher is born in Roman-occupied Judea. The movement around him becomes Christianity.",        month: 12, day: 31, hour: 23, min: 59, sec: 55, historicalYear:     -4 },
+  { name: "Invention of zero",                       slug: "Bakhshali_manuscript",                           desc: "Indian mathematicians give the number zero its modern form, transforming arithmetic.",                   month: 12, day: 31, hour: 23, min: 59, sec: 56, historicalYear:    300 },
+  { name: "Muhammad is born",                        slug: "Muhammad",                                       desc: "Muhammad is born in Mecca. He will found Islam, which spreads rapidly across three continents.",          month: 12, day: 31, hour: 23, min: 59, sec: 56, historicalYear:    570 },
+  { name: "Maya civilisation peaks",                 slug: "Maya_civilization",                              desc: "The classic Maya build vast stone cities, hieroglyphic writing and precise astronomy.",                  month: 12, day: 31, hour: 23, min: 59, sec: 57, historicalYear:    750 },
+  { name: "Mongol Empire founded",                   slug: "Mongol_Empire",                                  desc: "Genghis Khan unites the steppe tribes; his successors build the largest contiguous empire in history.",  month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1206 },
+  { name: "European Renaissance begins",             slug: "Renaissance",                                    desc: "Art, science and humanist thought blossom across Italy and then all of Europe.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1450 },
+  { name: "Modern period of history begins",         slug: "Age_of_Discovery",                               desc: "Printing presses, gunpowder, global navigation — the modern world takes shape.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1492 },
+  // Required final-cosmic-second events — sub-second precision. `sec` is
+  // derived from the historical year so the slider (1 year per step) can land
+  // EXACTLY on each: sec = 60 - yearsAgo/437.5 where yearsAgo = 2026 − year.
+  { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 85 / 437.5, historicalYear: 1941, required: true },
+  { name: "World Wide Web released",                 slug: "World_Wide_Web",                                 desc: "Tim Berners-Lee makes the Web public from CERN, turning the internet into something everyone can browse.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 35 / 437.5, historicalYear: 1991, required: true },
+  { name: "First iPhone — smartphone era begins",    slug: "History_of_the_iPhone",                          desc: "Apple releases the first iPhone. Within a decade, more than a billion people will carry a connected computer in their pocket.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 19 / 437.5, historicalYear: 2007 },
+  { name: "ChatGPT released",                        slug: "ChatGPT",                                        desc: "A general-purpose language model becomes a consumer product, putting AI in front of hundreds of millions.", month: 12, day: 31, hour: 23, min: 59, sec: 60 -  4 / 437.5, historicalYear: 2022, required: true },
 ];
 ALL_EVENTS.forEach(e => { e.hour = e.hour || 0; e.min = e.min || 0; e.sec = e.sec || 0; e.t = dateToT(e.month, e.day, e.hour, e.min, e.sec); });
 
@@ -1452,7 +1530,10 @@ function isFinalHourEvent(ev) {
 // Scale of the clock face for the current event.
 function clockScaleForEvent(ev) {
   if (!ev || ev.month !== 12 || ev.day !== 31) return null;
-  if (isFinalSecondEvent(ev)) return { kind:'second', start: 86399, span: 1,    ticks: 10, majorEvery: 5,  step: 0.001, label: 'Final cosmic second', labelFn: i => (i / 10).toFixed(1) };
+  // Final cosmic second: slider step = 1 real year = 1/437.5 cosmic seconds.
+  // Start is shifted from 86399 to 86400 − 437/437.5 so that the slider's
+  // (min + k·step) grid lands EXACTLY on every year-aligned event truth.
+  if (isFinalSecondEvent(ev)) return { kind:'second', start: 86400 - 437/437.5, span: 437/437.5, ticks: 10, majorEvery: 5, step: 1/437.5, label: 'Final cosmic second', labelFn: i => (i / 10).toFixed(1) };
   if (isFinalMinuteEvent(ev)) return { kind:'minute', start: 86340, span: 60,   ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic minute', labelFn: i => String(i).padStart(2,'0') + 's' };
   if (isFinalHourEvent(ev))   return { kind:'hour',   start: 82800, span: 3600, ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic hour',   labelFn: i => String(i).padStart(2,'0') + 'm' };
   return                              { kind:'day',    start: 0,    span: 86400,ticks: 24, majorEvery: 6,  step: 1,     label: 'December 31 · 24 hours', labelFn: i => String(i).padStart(2,'0') };
@@ -1469,7 +1550,7 @@ function sliderMinForMode(mode) {
   if (mode === 'time') {
     // Start from the scale boundary that fits this event.
     let min = 0;
-    if (isFinalSecondEvent(ev)) min = 86399;
+    if (isFinalSecondEvent(ev)) min = 86400 - 437 / 437.5; // year-aligned start of final second
     else if (isFinalMinuteEvent(ev)) min = 86340;
     else if (isFinalHourEvent(ev))   min = 82800;
     // And never let the player guess earlier than the previously placed event
@@ -1518,8 +1599,11 @@ function switchMode(newMode) {
 // ============================================================================
 function updateReadout() {
   const t = currentGuessT();
+  const ev = currentEvent();
   $('readout-date').textContent = formatT(t, state.mode === 'time' || (t >= dateToT(12, 31)));
-  $('readout-ago').textContent  = formatRealYearsAgo(t);
+  // Event-anchored year display: the CE/BCE in brackets lines up with the
+  // event's real historical year when the player lands on the right cosmic second.
+  $('readout-ago').textContent = formatYearAtPosition(t, ev);
 }
 
 function updateAll() {
@@ -1590,7 +1674,8 @@ function formatYearsOff(deltaT) {
 function showScorePopup(score, deltaT) {
   scorePopup.querySelector('.pop-main').textContent = `+${score}`;
   scorePopup.querySelector('.pop-sub').textContent  = formatYearsOff(deltaT);
-  scorePopup.classList.toggle('low', score < 400);
+  scorePopup.classList.toggle('low',     score < 400);
+  scorePopup.classList.toggle('perfect', score === 1000);
   scorePopup.classList.remove('show');
   void scorePopup.offsetWidth; // restart animation
   scorePopup.classList.add('show');
@@ -1613,18 +1698,26 @@ async function loadInfoBox(ev) {
   const r = state.results[state.results.length - 1];
   if (r && r.event === ev && !r.isTutorial) {
     const isDec31 = (ev.month === 12 && ev.day === 31);
-    const guessCal = formatT(r.guessT, isDec31);
     const truthCal = formatT(ev.t,     isDec31);
+    const guessCal = formatT(r.guessT, isDec31);
+    const truthAgo = formatYearAtPosition(ev.t, ev);
+    // Guess row keeps its calendar-position cell but drops the years-ago cell —
+    // no competing year display, just where the player placed the marker.
+    // The row is green when the player nailed the right cosmic second, orange
+    // otherwise. (Actual row is always green.)
+    // Green only when the player hit the exact same cosmic second as the truth
+    // (score = 1000). Anything less stays orange.
+    const guessClass = (r.score === 1000) ? 'row guess-correct' : 'row guess';
     $('info-result').innerHTML =
-      `<div class="row guess">
+      `<div class="${guessClass}">
          <span class="lbl">Your guess</span>
          <span class="val">${escapeHtml(guessCal)}</span>
-         <span class="ago">${escapeHtml(formatRealYearsAgo(r.guessT))}</span>
+         <span class="ago"></span>
        </div>
        <div class="row truth">
          <span class="lbl">Actual</span>
          <span class="val">${escapeHtml(truthCal)}</span>
-         <span class="ago">${escapeHtml(formatRealYearsAgo(ev.t))}</span>
+         <span class="ago">${escapeHtml(truthAgo)}</span>
        </div>
        <div class="delta">+${r.score} · ${escapeHtml(formatYearsOff(r.deltaT))}</div>`;
   } else {
