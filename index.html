@@ -380,6 +380,10 @@
   }
   #info-img.hidden { display: none; }
   .info-no-image { color: var(--ink-dimmer); font-size: 11px; padding: 8px; text-align: center; }
+  .info-cosmic-ago {
+    color: var(--ink-dim); font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px;
+  }
   .info-title { font-size: 18px; color: var(--accent); margin-bottom: 6px; }
   .info-desc { color: var(--ink); font-size: 13px; line-height: 1.5; }
   .info-desc a {
@@ -399,6 +403,9 @@
   .info-result .row .lbl { color: var(--ink-dim); min-width: 80px; }
   .info-result .row .val { flex: 1; font-variant-numeric: tabular-nums; }
   .info-result .row .ago { text-align: right; font-variant-numeric: tabular-nums; }
+  /* The "c. xxx" / "X years ago" cell on the Actual row stays neutral
+     blue-violet so it doesn't read as part of the green truth highlight. */
+  .info-result .row.truth .ago { color: var(--ink-dim); }
   .info-result .row.guess         { color: var(--accent-2); }
   .info-result .row.guess-correct { color: var(--good); }
   .info-result .row.truth         { color: var(--good); }
@@ -609,6 +616,7 @@
           <div id="info-no-image" class="info-no-image" style="display:none">Image loading…</div>
         </div>
         <div class="info-text">
+          <div class="info-cosmic-ago" id="info-cosmic-ago"></div>
           <div class="info-title" id="info-title"></div>
           <div class="info-desc" id="info-desc"></div>
           <div class="info-meta" id="info-meta"></div>
@@ -629,8 +637,8 @@
 
     <div class="why-box" id="why-box">
       <h3>Why this game?</h3>
-      <p>Carl Sagan introduced the Cosmic Calendar in his 1977 book <em>The Dragons of Eden</em> and popularised it in <em>Cosmos</em> to give people a visceral sense of deep time — that everything we know as human history is squeezed into the last few seconds of a 13.8-billion-year year, and that the universe was doing perfectly well without us for the other 364 days.</p>
-      <p>The pace of change at the very end of that calendar keeps accelerating. The steam engine, the railway, and the aeroplane have probably resulted in more change in a century than previous inventions did in a millennium. The world wide web, GPS positioning, the smartphone, streaming, the gig economy, and biometric surveillance: many of the inventions that impact our life today were not even around when we were born.<br><br>Machine intelligence is now beginning to reshape work itself, and transforming how human minds form, learn and decide. It is becoming hard to tell real from fake; consequential choices are slipping into systems no person controls; and a world of global conflict and personal unease appears to have returned. For most of us the ground feels less solid than it once did — and the pace may only accelerate even further.</p>
+      <p>Carl Sagan introduced the Cosmic Calendar in his 1977 book <em>The Dragons of Eden</em> and popularised it in <em>Cosmos</em> to give people a visceral sense of deep time — that everything we know as human history is squeezed into the last few seconds of a 13.8-billion-year year, and that <strong>the universe was doing perfectly well without us for the other 364 days</strong>.</p>
+      <p>The pace of change at the very end of that calendar keeps accelerating. The steam engine, the railway, and the aeroplane have probably resulted in more change in a century than previous inventions did in a millennium. The world wide web, GPS positioning, the smartphone, streaming, the gig economy, and biometric surveillance: <strong>many of the inventions that impact our life today were not even around when we were born</strong>.<br><br>Machine intelligence is now beginning to reshape work itself, and transform how human minds form, learn and decide. It is becoming hard to tell real from fake; consequential choices are slipping into systems no person controls; and a world of global conflict and personal unease appears to have returned. For most of us the ground feels less solid than it once did — and <strong>the pace may accelerate even further</strong>.</p>
       <div class="quote">
         "It's just going to get weirder and weirder and weirder, and finally, it's going to be so weird that people are going to have to talk about how weird it is."
         <span class="attr">— Terence McKenna (<a href="https://www.youtube.com/watch?v=25HPlSOEGow" target="_blank" rel="noopener noreferrer">video ↗</a>)</span>
@@ -757,6 +765,43 @@ function calendarYearTag(yearsAgo) {
 // the slider can pin a cosmic second.
 // `opts.precise` shows "(YYYY CE/BCE)" derived from the cosmic position. We
 // only set this for fine-resolution scales (final-second).
+// Cosmic-time elapsed since the event, expressed in whichever cosmic unit
+// fits best (cosmic ms / s / min / hr / day). Used above the event name in
+// the info-box to give the player a feel for "how recently" something
+// happened on the cosmic-calendar scale.
+function formatCosmicAgo(yearsAgo) {
+  if (yearsAgo < 0.0005) return 'right now';
+  const trim = n => parseFloat(n.toString());
+  const sec = yearsAgo / REAL_YEARS_PER_COSMIC_SECOND; // cosmic seconds
+  if (sec <  0.001)  return `${Math.round(sec * 1e6)} cosmic microseconds ago`;
+  if (sec <  1)      return `${Math.round(sec * 1e3)} cosmic milliseconds ago`;
+  if (sec < 60)      return `${trim(sec.toFixed(1))} cosmic seconds ago`;
+  const m = sec / 60;
+  if (m < 60)        return `${trim(m.toFixed(1))} cosmic minutes ago`;
+  const h = m / 60;
+  if (h < 24)        return `${trim(h.toFixed(1))} cosmic hours ago`;
+  const d = h / 24;
+  if (d < 365)       return `${Math.round(d)} cosmic days ago`;
+  return `${trim((d / 365).toFixed(2))} cosmic years ago`;
+}
+// Concise date tag for the Actual row. For events with a known historical
+// year (modern era) we show the year plainly — "2022 CE" / "4 BCE". For
+// deep-time events we don't know an exact year so we prefix with "c."
+// (circa): "c. 2 billion years ago".
+function formatHistoricalCirca(ev) {
+  if (!ev) return '';
+  if (ev.historicalYear != null) {
+    const y = ev.historicalYear;
+    return y > 0 ? `${y} CE` : `${-y} BCE`;
+  }
+  const yearsAgo = Math.max(0, (1 - ev.t) * REAL_YEARS_TOTAL);
+  const trim = n => parseFloat(n.toString());
+  if (yearsAgo >= 1e9) return `c. ${trim((yearsAgo / 1e9).toFixed(2))} billion years ago`;
+  if (yearsAgo >= 1e6) return `c. ${trim((yearsAgo / 1e6).toFixed(1))} million years ago`;
+  if (yearsAgo >= 1e3) return `c. ${trim((yearsAgo / 1e3).toFixed(1))} thousand years ago`;
+  return `c. ${Math.round(yearsAgo)} years ago`;
+}
+
 // Year display *anchored* to the current event's real historical year. As the
 // player slides, the year ticks off by exactly 437.5 years per cosmic second
 // from the truth's year — so when the slider lands on the right cosmic second
@@ -843,7 +888,7 @@ const ALL_EVENTS = [
   { name: "First known biotic life remains",         slug: "Earliest_known_life_forms",                      desc: "The oldest chemical fingerprints of life on Earth — traces locked in ancient rocks.",                    month: 9,  day: 14 },
   { name: "First life (prokaryotes)",                slug: "Prokaryote",                                     desc: "Single-celled organisms without a nucleus appear in Earth's oceans.",                                    month: 9,  day: 21 },
   { name: "Photosynthesis evolves",                  slug: "Stromatolite",                                   desc: "Cyanobacteria learn to turn sunlight into food, slowly pumping oxygen into the atmosphere. The earliest fossil evidence — these ancient layered rocks — survives today.", month: 9,  day: 30 },
-  { name: "Oxygenation of the atmosphere",           slug: "Great_Oxidation_Event",                          desc: "Free oxygen builds up in the air for the first time — a disaster for most existing life.",              month: 10, day: 29 },
+  { name: "Oxygenation of the atmosphere",           slug: "Banded_iron_formation",                          desc: "Free oxygen builds up in the air for the first time — a disaster for most existing life. The iron in the oceans rusted and settled into these striped layers, the era's surviving evidence.", month: 10, day: 29 },
   { name: "First eukaryotes — cells with a nucleus", slug: "Eukaryote",                                      desc: "Cells with a nucleus and internal machinery appear — the foundation for all plants and animals.",        month: 11, day: 9 },
   { name: "First multicellular life",                slug: "Multicellular_organism",                         desc: "Cells start sticking together and sharing work — the first true bodies.",                                month: 12, day: 5 },
   { name: "Simple animals appear",                   slug: "Animal",                                         desc: "The earliest soft-bodied animals — sponges and jellyfish-like creatures — appear.",                      month: 12, day: 7 },
@@ -879,7 +924,7 @@ const ALL_EVENTS = [
   { name: "Invention of agriculture",                slug: "Agriculture",                                    desc: "People stop wandering and begin to farm wheat, barley, and rice.",                                       month: 12, day: 31, hour: 23, min: 59, sec: 32, historicalYear: -10000 },
   { name: "End of the last Ice Age",                 slug: "Holocene",                                       desc: "The ice sheets retreat, sea levels rise, the climate becomes mild.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 33, historicalYear:  -9700 },
   { name: "Flooding of Doggerland",                  slug: "Doggerland",                                     desc: "Rising seas swallow the land bridge that once joined Britain to mainland Europe.",                       month: 12, day: 31, hour: 23, min: 59, sec: 41, historicalYear:  -6200 },
-  { name: "Chalcolithic begins",                     slug: "Copper",                                         desc: "People start working with copper alongside their stone tools.",                                          month: 12, day: 31, hour: 23, min: 59, sec: 45, historicalYear:  -4500 },
+  { name: "Chalcolithic (copper-stone age) begins",  slug: "Copper",                                         desc: "People start working with copper alongside their stone tools — the first metal era.",                    month: 12, day: 31, hour: 23, min: 59, sec: 45, historicalYear:  -4500 },
   { name: "Early Bronze Age begins",                 slug: "Bronze_Age",                                     desc: "People begin smelting tin and copper into bronze, the first useful alloy.",                              month: 12, day: 31, hour: 23, min: 59, sec: 47, historicalYear:  -3300 },
   { name: "Proto-writing",                           slug: "Proto-writing",                                  desc: "The first symbol systems begin to record numbers, goods and names.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 47, historicalYear:  -3500 },
   { name: "Early Egyptian dynasties",                slug: "Early_Dynastic_Period_(Egypt)",                  desc: "Upper and Lower Egypt unite under the first pharaohs along the Nile.",                                   month: 12, day: 31, hour: 23, min: 59, sec: 48, historicalYear:  -3100 },
@@ -901,11 +946,20 @@ const ALL_EVENTS = [
   { name: "Mongol Empire founded",                   slug: "Mongol_Empire",                                  desc: "Genghis Khan unites the steppe tribes; his successors build the largest contiguous empire in history.",  month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1206 },
   { name: "European Renaissance begins",             slug: "Renaissance",                                    desc: "Art, science and humanist thought blossom across Italy and then all of Europe.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1450 },
   { name: "Modern period of history begins",         slug: "Age_of_Discovery",                               desc: "Printing presses, gunpowder, global navigation — the modern world takes shape.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1492 },
-  // Required final-cosmic-second events — sub-second precision. `sec` is
-  // derived from the historical year so the slider (1 year per step) can land
-  // EXACTLY on each: sec = 60 - yearsAgo/437.5 where yearsAgo = 2026 − year.
-  { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 85 / 437.5, historicalYear: 1941, required: true },
-  { name: "World Wide Web released",                 slug: "World_Wide_Web",                                 desc: "Tim Berners-Lee makes the Web public from CERN, turning the internet into something everyone can browse.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 35 / 437.5, historicalYear: 1991, required: true },
+  // ---- Final cosmic second pool. `sec` is derived from the historical year
+  // so the slider (1 year per step) can land EXACTLY on each:
+  //   sec = 60 − (2026 − historicalYear) / 437.5
+  // Three of these are required every game (Zuse / WWW / ChatGPT) — the
+  // acceleration is the whole point. The rest are optional pool events.
+  { name: "Steam engine (Watt)",                     slug: "Watt_steam_engine",                              desc: "James Watt patents the separate-condenser steam engine — the workhorse of the Industrial Revolution.",    month: 12, day: 31, hour: 23, min: 59, sec: 60 - 257 / 437.5, historicalYear: 1769 },
+  { name: "Railway era begins",                      slug: "Locomotion_No._1",                               desc: "The Stockton & Darlington Railway opens — the first public line worked by steam locomotives. This is Locomotion No. 1, the engine that pulled it.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 201 / 437.5, historicalYear: 1825 },
+  { name: "Telephone invented",                      slug: "Telephone",                                      desc: "Alexander Graham Bell patents the telephone — voice can suddenly travel any distance.",                   month: 12, day: 31, hour: 23, min: 59, sec: 60 - 150 / 437.5, historicalYear: 1876 },
+  { name: "First powered flight",                    slug: "Wright_brothers",                                desc: "The Wright Brothers fly the first heavier-than-air powered aircraft at Kitty Hawk.",                      month: 12, day: 31, hour: 23, min: 59, sec: 60 - 123 / 437.5, historicalYear: 1903 },
+  { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 60 -  85 / 437.5, historicalYear: 1941, required: true },
+  { name: "Apollo 11 — humans land on the Moon",     slug: "Apollo_11",                                      desc: "Neil Armstrong and Buzz Aldrin set foot on another world; the first time any human has left Earth.",      month: 12, day: 31, hour: 23, min: 59, sec: 60 -  57 / 437.5, historicalYear: 1969 },
+  { name: "Internet (TCP/IP) is born",               slug: "Internet",                                       desc: "ARPANET adopts TCP/IP, turning a research network of computers into a single global one.",                month: 12, day: 31, hour: 23, min: 59, sec: 60 -  43 / 437.5, historicalYear: 1983 },
+  { name: "World Wide Web released",                 slug: "World_Wide_Web",                                 desc: "Tim Berners-Lee makes the Web public from CERN, turning the internet into something everyone can browse.", month: 12, day: 31, hour: 23, min: 59, sec: 60 -  35 / 437.5, historicalYear: 1991, required: true },
+  { name: "GPS becomes fully operational",           slug: "Global_Positioning_System",                      desc: "The Global Positioning System reaches full operational capability — anyone on Earth can know exactly where they are.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 31 / 437.5, historicalYear: 1995 },
   { name: "First iPhone — smartphone era begins",    slug: "History_of_the_iPhone",                          desc: "Apple releases the first iPhone. Within a decade, more than a billion people will carry a connected computer in their pocket.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 19 / 437.5, historicalYear: 2007 },
   { name: "ChatGPT released",                        slug: "ChatGPT",                                        desc: "A general-purpose language model becomes a consumer product, putting AI in front of hundreds of millions.", month: 12, day: 31, hour: 23, min: 59, sec: 60 -  4 / 437.5, historicalYear: 2022, required: true },
 ];
@@ -919,14 +973,14 @@ const TUTORIAL_EVENT = ALL_EVENTS.find(e => e.name === 'The Big Bang');
 function sampleEvents() {
   const pool = ALL_EVENTS.filter(e => !e.required && e !== TUTORIAL_EVENT);
   const buckets = [
-    pool.filter(e => e.month <= 2),                                                              // early universe
-    pool.filter(e => e.month >= 3 && e.month <= 8),                                              // mid universe / star formation
-    pool.filter(e => e.month >= 9 && e.month <= 11),                                             // solar system + early life
-    pool.filter(e => e.month === 12 && e.day < 30),                                              // pre-Dec-31 biology/evolution
-    pool.filter(e => e.month === 12 && (e.day === 30 || (e.day === 31 && e.hour < 23))),         // dinosaurs end / early apes
-    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min < 59),             // recent humans (final hour)
-    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59 && e.sec <  59), // final-minute pool (recorded history)
-    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59 && e.sec >= 59), // extra final-second pool (Modern period, iPhone, …)
+    pool.filter(e => e.month <= 2),                                                              // 0 early universe
+    pool.filter(e => e.month >= 3 && e.month <= 8),                                              // 1 mid universe / star formation
+    pool.filter(e => e.month >= 9 && e.month <= 11),                                             // 2 solar system + early life
+    pool.filter(e => e.month === 12 && e.day < 30),                                              // 3 Dec biology (Dec 5–29)
+    pool.filter(e => e.month === 12 && (e.day === 30 || (e.day === 31 && e.hour < 23))),         // 4 dinosaurs end / early apes
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min < 59),             // 5 recent humans (final hour)
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59 && e.sec <  59), // 6 final-minute pool
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59 && e.sec >= 59), // 7 final-second pool
   ];
   // Fisher-Yates shuffle — proper uniform random; sort-by-Math.random comparator is biased.
   function shuffle(arr) {
@@ -937,15 +991,57 @@ function sampleEvents() {
     }
     return a;
   }
+  // Weighted shuffle that biases toward the LATER end of a bucket's time
+  // range — so events closer to "now" within each scale show up more often
+  // than events near the left edge of the slider. biasLate ∈ [0..1]; 0 = no
+  // bias (uniform), 1 = maximum bias (earliest never picked unless alone).
+  // Uses the Gumbel-max trick for unbiased weighted reservoir sampling.
+  function weightedShuffleLate(arr, biasLate = 0.65) {
+    if (arr.length <= 1) return [...arr];
+    const sorted = [...arr].sort((a, b) => a.t - b.t);
+    const minT = sorted[0].t, maxT = sorted[sorted.length - 1].t;
+    const range = (maxT - minT) || 1;
+    return arr
+      .map(e => {
+        const norm = (e.t - minT) / range;            // 0 = earliest, 1 = latest within bucket
+        const w    = (1 - biasLate) + biasLate * norm; // latest ~ (1/(1-biasLate))× more likely than earliest
+        return { e, k: -Math.log(Math.random()) / w };
+      })
+      .sort((a, b) => a.k - b.k)
+      .map(x => x.e);
+  }
   // Weighted to *showcase the great acceleration* — the closer we get to the
   // present moment, the denser the events. The first 13.8 billion years
   // (bucket 0–4) only contribute ~5 events, while the final cosmic minute +
   // second contribute ~8.
-  //                       early uni · mid uni · solar/life · biology · Dec30/hom · final-hour · final-minute · final-second pool
-  const perBucket =        [1,         1,        1,           1,        2,          2,           3,             1]; // 12, + 3 REQUIRED_FINAL = 15 total
+  //                       early uni · mid uni · solar/life · Dec biology · Dec30/hom · final-hour · final-minute · final-second pool
+  const perBucket =        [0,         1,        1,           2,            2,          2,           3,             4]; // 15, + 3 REQUIRED_FINAL = 18 total
+  //  No January (bucket 0 = 0). The Dec-biology bucket picks 2; the late-bias
+  //  will usually land at least one in Dec 26–29, but if it doesn't a
+  //  post-sampling floor (below) guarantees ≥ 1 event in the final 5 days.
   const picked = [];
+  // Per-bucket bias: heavier for the final-second pool so really old events
+  // (Steam engine, Railway) are very rarely the *first* one in their cosmic
+  // second — keeping most slider truths in the right half of the slider.
+  //                     0    1    2    3    4    5    6    7
+  const biasPerBucket = [0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.92];
   for (let i = 0; i < buckets.length; i++) {
-    picked.push(...shuffle(buckets[i]).slice(0, perBucket[i]));
+    picked.push(...weightedShuffleLate(buckets[i], biasPerBucket[i]).slice(0, perBucket[i]));
+  }
+  // Floor: every game has *at least* one year-scale event in the final five
+  // cosmic days (Dec 26-29). If the random Dec-biology pick missed that
+  // range, swap in a late-biology event in place of the earliest Dec one.
+  const inFinal5 = e => e.month === 12 && e.day >= 26 && e.day < 30;
+  if (!picked.some(inFinal5)) {
+    const candidates = pool.filter(e => inFinal5(e) && !picked.includes(e));
+    if (candidates.length) {
+      const replacement = weightedShuffleLate(candidates, 0.65)[0];
+      const earliestDec = picked
+        .filter(e => e.month === 12 && e.day < 26)
+        .sort((a, b) => a.t - b.t)[0];
+      if (earliestDec) picked[picked.indexOf(earliestDec)] = replacement;
+      else             picked.push(replacement);
+    }
   }
   picked.push(...REQUIRED_FINAL);
   picked.sort((a, b) => a.t - b.t);
@@ -1357,8 +1453,8 @@ function drawClock() {
 
   clockSvg.innerHTML = s;
   const cap = document.querySelector('.clock-caption');
-  if (cap && cap.textContent !== scale.label) {
-    cap.textContent = scale.label;
+  if (cap && cap.innerHTML !== scale.label) {
+    cap.innerHTML = scale.label;     // scale.label contains <strong> markup
     // Materialise both the caption and the clock face itself so the scale
     // change is unmistakable (hour → minute → second zoom-ins).
     for (const el of [cap, clockSvg]) {
@@ -1533,10 +1629,10 @@ function clockScaleForEvent(ev) {
   // Final cosmic second: slider step = 1 real year = 1/437.5 cosmic seconds.
   // Start is shifted from 86399 to 86400 − 437/437.5 so that the slider's
   // (min + k·step) grid lands EXACTLY on every year-aligned event truth.
-  if (isFinalSecondEvent(ev)) return { kind:'second', start: 86400 - 437/437.5, span: 437/437.5, ticks: 10, majorEvery: 5, step: 1/437.5, label: 'Final cosmic second', labelFn: i => (i / 10).toFixed(1) };
-  if (isFinalMinuteEvent(ev)) return { kind:'minute', start: 86340, span: 60,   ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic minute', labelFn: i => String(i).padStart(2,'0') + 's' };
-  if (isFinalHourEvent(ev))   return { kind:'hour',   start: 82800, span: 3600, ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic hour',   labelFn: i => String(i).padStart(2,'0') + 'm' };
-  return                              { kind:'day',    start: 0,    span: 86400,ticks: 24, majorEvery: 6,  step: 1,     label: 'December 31 · 24 hours', labelFn: i => String(i).padStart(2,'0') };
+  if (isFinalSecondEvent(ev)) return { kind:'second', start: 86400 - 437/437.5, span: 437/437.5, ticks: 10, majorEvery: 5, step: 1/437.5, label: 'Final cosmic <strong>second</strong>', labelFn: i => (i / 10).toFixed(1) };
+  if (isFinalMinuteEvent(ev)) return { kind:'minute', start: 86340, span: 60,   ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic <strong>minute</strong>', labelFn: i => String(i).padStart(2,'0') + 's' };
+  if (isFinalHourEvent(ev))   return { kind:'hour',   start: 82800, span: 3600, ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic <strong>hour</strong>',   labelFn: i => String(i).padStart(2,'0') + 'm' };
+  return                              { kind:'day',    start: 0,    span: 86400,ticks: 24, majorEvery: 6,  step: 1,     label: 'Final cosmic <strong>day</strong>',    labelFn: i => String(i).padStart(2,'0') };
 }
 // The slider anchors to the relevant scale of the *current* event:
 //   • final cosmic second → min is the start of that final second
@@ -1689,6 +1785,15 @@ async function loadInfoBox(ev) {
   infoNoImg.style.display = 'none';
   infoImg.removeAttribute('src');
   infoTitle.textContent = ev.name;
+  // Cosmic-time "X ago" line just above the title — but skip it for the
+  // Big Bang tutorial card (it would just read "1 cosmic year ago" which is
+  // both confusing and trivially the start of cosmic time).
+  if (ev === TUTORIAL_EVENT) {
+    $('info-cosmic-ago').textContent = '';
+  } else {
+    const yearsAgoTrue = Math.max(0, (1 - ev.t) * REAL_YEARS_TOTAL);
+    $('info-cosmic-ago').textContent = formatCosmicAgo(yearsAgoTrue);
+  }
   // Read-more link appended to the end of the description
   const pageUrl = `https://en.wikipedia.org/wiki/${ev.slug}`;
   infoDesc.innerHTML = `${escapeHtml(ev.desc || '')} ` +
@@ -1700,7 +1805,10 @@ async function loadInfoBox(ev) {
     const isDec31 = (ev.month === 12 && ev.day === 31);
     const truthCal = formatT(ev.t,     isDec31);
     const guessCal = formatT(r.guessT, isDec31);
-    const truthAgo = formatYearAtPosition(ev.t, ev);
+    // Truth's "ago" cell shows just a concise "c. YYYY CE/BCE" — the
+    // long-form "X years ago" already lives in the cosmic-ago line above
+    // the event name.
+    const truthAgo = formatHistoricalCirca(ev);
     // Guess row keeps its calendar-position cell but drops the years-ago cell —
     // no competing year display, just where the player placed the marker.
     // The row is green when the player nailed the right cosmic second, orange
@@ -1932,12 +2040,13 @@ loadEvent(0);
   const show = sel => { const el = document.querySelector(sel); if (el) el.classList.add('fade-in'); };
   // t = 2 s: the second tutorial line ("The Big Bang occurred on Jan 1, 00:00 AM.") appears.
   setTimeout(() => show('#tut-line-2'), 2000);
-  // t = 4 s: the question, counter and first event name appear (no wiggle on this first one).
+  // t = 5 s: the question, counter and first event name appear (extra beat so
+  // the player can actually read the Big-Bang line before the GUI keeps unfolding).
   setTimeout(() => {
     show('.prompt-question-row');
     show('.prompt-line');
-  }, 4000);
-  // t = 6 s: the rest of the GUI — year overview, calendar, info-box, readout, slider, button.
+  }, 5000);
+  // t = 7 s: the rest of the GUI — year overview, calendar, info-box, readout, slider, button.
   setTimeout(() => {
     show('.overview');
     show('#viz');
@@ -1945,7 +2054,7 @@ loadEvent(0);
     show('#readout');
     show('#controls');
     show('#button-row');
-  }, 6000);
+  }, 7000);
 })();
 </script>
 </body>
