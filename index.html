@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Cosmic Calendar — Pinpoint the Events</title>
+
+<meta name="description" content="13.8 billion years compressed into one year. Place events from the Big Bang to today, watch the universe fold into a single calendar, and feel just how recent we are. Inspired by Carl Sagan's Cosmos.">
+<meta name="author" content="Thorben Pelzer">
+<meta name="theme-color" content="#07071a">
+
+<!-- Open Graph (Facebook, LinkedIn, Discord, Signal, etc.) -->
+<meta property="og:title" content="The Cosmic Calendar — Pinpoint the Events">
+<meta property="og:description" content="13.8 billion years compressed into one year. Place events from the Big Bang to today and feel just how recent we are. Inspired by Carl Sagan's Cosmos.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Hubble_ultra_deep_field.jpg/1200px-Hubble_ultra_deep_field.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1200">
+<meta property="og:image:alt" content="Hubble Ultra Deep Field — thousands of galaxies across deep time.">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Cosmic Calendar — Pinpoint the Events">
+<meta name="twitter:description" content="13.8 billion years compressed into one year. Pinpoint events from the Big Bang to today.">
+<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Hubble_ultra_deep_field.jpg/1200px-Hubble_ultra_deep_field.jpg">
+
+<!-- Favicon: tiny 4×3 calendar grid with December lit in gold -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%2307071a'/%3E%3Cg fill='%233a2868'%3E%3Crect x='8' y='14' width='12' height='12' rx='2'/%3E%3Crect x='22' y='14' width='12' height='12' rx='2'/%3E%3Crect x='36' y='14' width='12' height='12' rx='2'/%3E%3Crect x='8' y='28' width='12' height='12' rx='2'/%3E%3Crect x='22' y='28' width='12' height='12' rx='2'/%3E%3Crect x='36' y='28' width='12' height='12' rx='2'/%3E%3Crect x='8' y='42' width='12' height='12' rx='2'/%3E%3Crect x='22' y='42' width='12' height='12' rx='2'/%3E%3C/g%3E%3Crect x='36' y='42' width='12' height='12' rx='2' fill='%23ffd479'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307071a'/%3E%3Cg fill='%233a2868'%3E%3Crect x='8' y='14' width='12' height='12' rx='2'/%3E%3Crect x='22' y='14' width='12' height='12' rx='2'/%3E%3Crect x='36' y='14' width='12' height='12' rx='2'/%3E%3Crect x='8' y='28' width='12' height='12' rx='2'/%3E%3Crect x='22' y='28' width='12' height='12' rx='2'/%3E%3Crect x='36' y='28' width='12' height='12' rx='2'/%3E%3Crect x='8' y='42' width='12' height='12' rx='2'/%3E%3Crect x='22' y='42' width='12' height='12' rx='2'/%3E%3C/g%3E%3Crect x='36' y='42' width='12' height='12' rx='2' fill='%23ffd479'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #07071a;
+    --panel: #11112a;
+    --panel-2: #181838;
+    --panel-3: #0d0d22;
+    --ink: #e8e8f5;
+    --ink-dim: #9a9ac0;
+    --ink-dimmer: #6a6a8a;
+    --accent: #ffd479;
+    --accent-2: #ff7a59;
+    --good: #66e08f;
+    --bad: #ff6b6b;
+    --line: #2a2a55;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  body {
+    background: radial-gradient(ellipse at top, #1a1a3d 0%, #07071a 60%);
+    min-height: 100vh;
+    padding: 14px 24px 60px;
+  }
+
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+    max-width: 1100px; margin-left: auto; margin-right: auto;
+  }
+  .title-stack { display: flex; flex-direction: column; gap: 2px; }
+  h1 { margin: 0; font-weight: 300; font-size: 22px; letter-spacing: 2px; color: var(--accent); }
+  h1 .sub { color: var(--ink-dim); font-size: 13px; margin-left: 14px; letter-spacing: 1px; }
+  .sagan { color: var(--ink-dimmer); font-size: 11px; letter-spacing: 2px; font-style: italic; }
+
+  .header-right { display: flex; align-items: center; gap: 18px; }
+  .icon-btn {
+    background: transparent; border: 1px solid var(--line); color: var(--ink-dim);
+    width: 36px; height: 36px; border-radius: 50%;
+    font-size: 16px; cursor: pointer; padding: 0;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .icon-btn.muted { color: var(--bad); border-color: var(--bad); }
+
+  .score-box { text-align: right; font-variant-numeric: tabular-nums; }
+  .score-box .label { color: var(--ink-dim); font-size: 11px; letter-spacing: 2px; }
+  .score-box .value { font-size: 28px; color: var(--accent); }
+
+  main { max-width: 1100px; margin: 0 auto; display: grid; gap: 18px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+
+  h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; }
+
+  #overview-svg { width: 100%; height: 46px; display: block; }
+
+  .active .prompt {
+    text-align: center;
+    margin: 18px auto 6px;
+  }
+  .prompt-question {
+    color: var(--accent);
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 300;
+  }
+  .tutorial-line {
+    display: none;
+    color: var(--accent);
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 300;
+  }
+  .tutorial-line.show { display: block; }
+  .prompt-line {
+    display: inline-block; transform-origin: center bottom;
+  }
+  .clock-caption { display: inline-block; transform-origin: center; }
+  /* "Materialise" — sci-fi hologram-resolve effect that replaces the wiggle.
+     Avoid animating `letter-spacing` (reflow per frame) — use transform + filter
+     + text-shadow, all GPU-friendly, with a will-change hint. */
+  .materialize {
+    animation: materialize 1.05s cubic-bezier(0.18, 0.7, 0.22, 1) both;
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+  }
+  /* Question + counter on the same row; counter floats to the right without
+     shifting the question's centre alignment. */
+  .prompt-question-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .prompt-question-row .prompt-question { margin-bottom: 0; }
+  .prompt-question-row .counter {
+    grid-column: 3;
+    justify-self: end;
+    color: var(--ink-dim);
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding-right: 4px;
+  }
+  @keyframes materialize {
+    0% {
+      opacity: 0;
+      transform: scale(1.05);
+      filter: blur(6px);
+      text-shadow:
+        -6px 0 0 rgba(255, 122, 89, 0.70),
+         6px 0 0 rgba(110, 200, 255, 0.70);
+    }
+    15% {
+      opacity: 0.45;
+      transform: scale(1.04);
+      filter: blur(5px);
+      text-shadow:
+        -5px 0 0 rgba(255, 122, 89, 0.65),
+         5px 0 0 rgba(110, 200, 255, 0.65);
+    }
+    30% {
+      opacity: 0.70;
+      transform: scale(1.03);
+      filter: blur(3.5px);
+      text-shadow:
+        -4px 0 0 rgba(255, 122, 89, 0.55),
+         4px 0 0 rgba(110, 200, 255, 0.55);
+    }
+    45% {
+      opacity: 0.88;
+      transform: scale(1.02);
+      filter: blur(2px);
+      text-shadow:
+        -2.5px 0 0 rgba(255, 122, 89, 0.45),
+         2.5px 0 0 rgba(110, 200, 255, 0.45),
+         0 0 14px rgba(255, 212, 121, 0.40);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.01);
+      filter: blur(1px);
+      text-shadow:
+        -1.2px 0 0 rgba(255, 122, 89, 0.30),
+         1.2px 0 0 rgba(110, 200, 255, 0.30),
+         0 0 12px rgba(255, 212, 121, 0.45);
+    }
+    75% {
+      opacity: 1;
+      transform: scale(1.004);
+      filter: blur(0.3px);
+      text-shadow:
+        -0.5px 0 0 rgba(255, 122, 89, 0.10),
+         0.5px 0 0 rgba(110, 200, 255, 0.10),
+         0 0 9px rgba(255, 212, 121, 0.35);
+    }
+    88% {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+      text-shadow: 0 0 6px rgba(255, 212, 121, 0.20);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+      text-shadow: none;
+    }
+  }
+  .prompt .name { font-size: 38px; color: var(--ink); font-weight: 400; line-height: 1.1; }
+  .prompt .counter { color: var(--ink-dim); font-size: 13px; letter-spacing: 2px; margin-left: 12px; }
+
+  .viz {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .viz.with-clock { grid-template-columns: 1fr 240px; }
+  #calendar-svg { width: 100%; height: auto; display: block; background: var(--panel-3); border-radius: 8px; padding: 0; }
+  #clock-wrap { display: none; flex-direction: column; align-items: center; gap: 6px; padding: 10px; background: var(--panel-3); border-radius: 8px; }
+  #clock-wrap.show { display: flex; }
+  #clock-svg { width: 100%; height: auto; max-width: 220px; display: block; }
+  .clock-caption {
+    color: var(--accent-2); font-size: 14px; letter-spacing: 2px;
+    text-transform: uppercase; padding-top: 2px;
+  }
+  /* For the materialise/scale animation on the clock SVG to spin from centre. */
+  #clock-svg { transform-origin: center; transform-box: fill-box; }
+
+  .readout {
+    text-align: center;
+    font-size: 22px;
+    margin: 16px 0 8px;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .readout .since {
+    display: block; color: var(--ink-dim); font-size: 17px; margin-top: 5px; letter-spacing: 0.5px;
+  }
+
+  .controls {
+    margin: 4px 0 14px;
+  }
+  .slider-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .slider-row input[type=range] { flex: 1; }
+  .nudge-btn {
+    width: 34px; height: 34px; padding: 0;
+    background: var(--panel-2); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 50%;
+    font-size: 20px; font-weight: 400; cursor: pointer;
+    letter-spacing: normal; text-transform: none; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nudge-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); background: var(--panel); }
+  .nudge-btn:active:not(:disabled) { background: var(--accent); color: #2a1a00; }
+  input[type=range] {
+    width: 100%; -webkit-appearance: none; appearance: none; background: transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track { height: 6px; background: var(--line); border-radius: 3px; }
+  input[type=range]::-moz-range-track { height: 6px; background: var(--line); border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); margin-top: -7px;
+    border: 2px solid #fff2; cursor: pointer;
+    box-shadow: 0 0 12px rgba(255,212,121,0.6);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #fff2; cursor: pointer;
+  }
+  .slider-labels {
+    display: flex; justify-content: space-between;
+    color: var(--ink-dimmer); font-size: 11px; margin-top: 4px; letter-spacing: 1px;
+  }
+
+  .button-row {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    margin-top: 6px; margin-bottom: 26px;
+  }
+  button {
+    background: var(--accent); color: #2a1a00;
+    border: none; padding: 12px 24px;
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    border-radius: 6px; cursor: pointer; font-weight: 600;
+    transition: transform 0.1s, background 0.15s;
+  }
+  button:hover:not(:disabled) { background: #ffe39c; }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
+  button.secondary:hover:not(:disabled) { background: #22224a; border-color: var(--accent); }
+  button.mode-active { background: var(--accent-2); color: #2a0a00; border: none; }
+
+  .info-box {
+    display: none;
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    grid-template-columns: 140px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .info-box.show { display: grid; }
+  .info-box.loading .info-image-wrap { opacity: 0.3; }
+  .info-image-wrap {
+    width: 140px; height: 140px; border-radius: 6px;
+    background: var(--panel-3);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  #info-img {
+    max-width: 100%; max-height: 100%; display: block; object-fit: cover;
+    width: 100%; height: 100%;
+  }
+  #info-img.hidden { display: none; }
+  .info-no-image { color: var(--ink-dimmer); font-size: 11px; padding: 8px; text-align: center; }
+  .info-title { font-size: 18px; color: var(--accent); margin-bottom: 6px; }
+  .info-desc { color: var(--ink); font-size: 13px; line-height: 1.5; }
+  .info-desc a {
+    color: var(--accent); text-decoration: none;
+    border-bottom: 1px dotted var(--ink-dimmer);
+    white-space: nowrap;
+  }
+  .info-desc a:hover { border-bottom-color: var(--accent); }
+  .info-result {
+    margin: 10px 0 6px;
+    padding: 8px 10px;
+    background: var(--panel-3);
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .info-result .row { display: flex; gap: 10px; padding: 3px 0; align-items: baseline; }
+  .info-result .row .lbl { color: var(--ink-dim); min-width: 80px; }
+  .info-result .row .val { flex: 1; font-variant-numeric: tabular-nums; }
+  .info-result .row .ago { color: var(--ink-dim); text-align: right; font-variant-numeric: tabular-nums; }
+  .info-result .row.guess { color: var(--accent-2); }
+  .info-result .row.truth { color: var(--good); }
+  .info-result .delta {
+    text-align: center; margin-top: 6px; padding-top: 6px;
+    border-top: 1px solid var(--line); color: var(--accent);
+    font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .info-meta { margin-top: 8px; color: var(--ink-dimmer); font-size: 11px; }
+  .info-meta a { color: var(--ink-dim); text-decoration: none; border-bottom: 1px dotted var(--ink-dimmer); }
+  .info-meta a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Score popup overlay */
+  #score-popup {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  #score-popup .pop-main {
+    font-size: 110px; font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(255,212,121,0.9), 0 0 60px rgba(255,212,121,0.4);
+    line-height: 1;
+  }
+  #score-popup .pop-sub {
+    font-size: 28px; margin-top: 10px; font-weight: 400;
+    color: var(--ink);
+    text-shadow: 0 0 16px rgba(232,232,245,0.5);
+    letter-spacing: 1px;
+  }
+  #score-popup.show { animation: popup 1.5s ease-out forwards; }
+  #score-popup.low .pop-main { color: var(--bad); text-shadow: 0 0 30px rgba(255,107,107,0.7); }
+  @keyframes popup {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    14%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+    75%  { opacity: 1; transform: translate(-50%, -55%) scale(1.0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.95); }
+  }
+
+  .final-card {
+    display: none;
+    margin-top: 18px;
+    padding: 22px 18px;
+    text-align: center;
+    background: linear-gradient(160deg, #1a1a3a 0%, #221a3c 100%);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(255,212,121,0.18);
+  }
+  .final-card.show { display: block; }
+  .final-card h2 {
+    color: var(--accent); font-size: 22px; font-weight: 300;
+    margin: 0 0 8px; letter-spacing: 2px; text-transform: uppercase; padding: 0;
+  }
+  .final-card .big {
+    font-size: 56px; color: var(--accent); margin: 8px 0;
+    font-variant-numeric: tabular-nums; text-shadow: 0 0 24px rgba(255,212,121,0.4);
+  }
+  .final-card .rank { color: var(--ink-dim); margin: 4px 0; font-size: 14px; }
+  .final-card .rank strong { color: var(--accent); }
+
+  .why-box {
+    display: none;
+    margin-top: 16px;
+    padding: 22px 22px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    line-height: 1.6;
+  }
+  .why-box.show { display: block; }
+  .why-box h3 {
+    margin: 0 0 10px; color: var(--accent);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .why-box p { margin: 0 0 12px; color: var(--ink); font-size: 14px; }
+  .why-box p:last-of-type { margin-bottom: 16px; }
+  .why-box .quote {
+    margin: 18px 0 0;
+    padding: 14px 18px;
+    border-left: 3px solid var(--accent);
+    background: var(--panel-3);
+    border-radius: 0 6px 6px 0;
+    color: var(--ink); font-style: italic; font-size: 14px;
+  }
+  .why-box .quote .attr {
+    display: block; margin-top: 6px; color: var(--ink-dim);
+    font-style: normal; font-size: 12px; letter-spacing: 1px;
+  }
+
+  footer.page-footer {
+    max-width: 1100px;
+    margin: 36px auto 0;
+    text-align: center;
+    color: var(--ink-dimmer);
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+  footer.page-footer a {
+    color: var(--ink-dim); text-decoration: none;
+    border-bottom: 1px dotted var(--ink-dimmer);
+  }
+  footer.page-footer a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Boot intro fades */
+  .fade-init { opacity: 0; transition: opacity 0.9s ease-out; }
+  .fade-init.fade-in { opacity: 1; }
+
+  /* SVG element styles */
+  .month-cell-bg { fill: var(--panel-2); }
+  .month-cell-bg.current { fill: #221e44; }
+  .month-cell-bg.passed { fill: #1a1e36; }
+  .month-name { fill: var(--ink-dim); font-size: 12px; font-family: inherit; letter-spacing: 2px; font-weight: 600; }
+  .month-name.current { fill: var(--accent); }
+  .day-cell { stroke: #0a0a1a; stroke-width: 0.5; cursor: pointer; }
+  .day-cell:hover { stroke: var(--accent); stroke-width: 1.5; }
+  .day-cell.future { fill: #232348; }
+  .day-cell.current { stroke: var(--accent); stroke-width: 2; fill: var(--accent); }
+  .day-cell.current.time-mode { fill: var(--accent-2); stroke: var(--accent-2); }
+  .day-cell.truth { stroke: var(--good); stroke-width: 2; }
+  .day-num { fill: #99a; font-size: 8px; font-family: inherit; text-anchor: middle; pointer-events: none; }
+  .day-num.passed { fill: #0a0a1a; }
+  .day-num.future { fill: #555577; }
+  .day-num.current { fill: #2a1a00; font-weight: 700; }
+  .ev-marker-old { fill: var(--good); stroke: #fff8; stroke-width: 1; pointer-events: none; }
+  .ev-marker-guess-old { fill: var(--accent-2); stroke: #fff8; stroke-width: 1; pointer-events: none; }
+  .ov-grid { stroke: var(--line); stroke-width: 1; }
+  .ov-month-label { fill: var(--ink-dimmer); font-size: 9px; font-family: inherit; letter-spacing: 1px; }
+  .clock-face { fill: var(--panel); stroke: var(--line); stroke-width: 1; }
+  .clock-tick { stroke: var(--ink-dim); stroke-width: 1; }
+  .clock-tick-major { stroke: var(--ink); stroke-width: 1.5; }
+  .clock-fill { fill: var(--accent-2); fill-opacity: 0.22; stroke: var(--accent-2); stroke-width: 1.5; }
+  .clock-hand { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; }
+  .clock-hand-truth { stroke: var(--good); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 3; }
+  .clock-hour-label { fill: var(--ink-dim); font-size: 10px; font-family: inherit; text-anchor: middle; }
+
+  @media (max-width: 720px) {
+    body { padding: 10px; }
+    h1 { font-size: 18px; }
+    h1 .sub { display: none; }
+    .viz.with-clock { grid-template-columns: 1fr; }
+    .prompt .name { font-size: 18px; }
+    .readout { font-size: 18px; }
+    button { padding: 10px 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-stack">
+    <h1>THE COSMIC CALENDAR <span class="sub">13.8 billion years compressed into one year</span></h1>
+    <div class="sagan">inspired by Carl Sagan's <em>Cosmos</em></div>
+  </div>
+  <div class="header-right">
+    <button id="mute-btn" class="icon-btn" title="Toggle sound">🔊</button>
+    <div class="score-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="score-value">0</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="panel overview fade-init">
+    <h2>Year overview · placed events</h2>
+    <svg id="overview-svg" viewBox="0 0 1000 46" preserveAspectRatio="none"></svg>
+  </section>
+
+  <section class="panel active" id="active-panel">
+    <div class="info-box fade-init" id="info-box">
+      <div class="info-image-wrap">
+        <img id="info-img" alt="">
+        <div id="info-no-image" class="info-no-image" style="display:none">Image loading…</div>
+      </div>
+      <div class="info-text">
+        <div class="info-title" id="info-title"></div>
+        <div class="info-desc" id="info-desc"></div>
+        <div class="info-result" id="info-result"></div>
+        <div class="info-meta" id="info-meta"></div>
+      </div>
+    </div>
+
+    <div class="final-card" id="final-card">
+      <h2>Calendar complete</h2>
+      <div class="rank" id="final-line">—</div>
+      <div class="big" id="final-score">0 / 16000</div>
+      <div class="rank" id="final-rank">—</div>
+      <div class="button-row" style="margin-top:14px">
+        <button onclick="location.reload()">Play again</button>
+      </div>
+    </div>
+
+    <div class="why-box" id="why-box">
+      <h3>Why this game?</h3>
+      <p>Carl Sagan introduced the Cosmic Calendar in his 1977 book <em>The Dragons of Eden</em> and popularised it in <em>Cosmos</em> to give people a visceral sense of deep time — that everything we know as human history is squeezed into the last few seconds of a 13.8-billion-year year, and that the universe was doing perfectly well without us for the other 364 days.</p>
+      <p>The pace of change at the very end of that calendar keeps accelerating. The steam engine, the railway, and the aeroplane have probably resulted in more change in a century than previous inventions did in a millennium. The world wide web, GPS positioning, the smartphone, streaming, the gig economy, and biometric surveillance: many of the inventions that impact our life today were not even around when we were born.<br><br>Machine intelligence is now beginning to reshape work itself, and transforming how human minds form, learn and decide. It is becoming hard to tell real from fake; consequential choices are slipping into systems no person controls; and a world of global conflict and personal unease appears to have returned. For most of us the ground feels less solid than it once did — and the pace may only accelerate even further.</p>
+      <div class="quote">
+        "It's just going to get weirder and weirder and weirder, and finally, it's going to be so weird that people are going to have to talk about how weird it is."
+        <span class="attr">— Terence McKenna (<a href="https://www.youtube.com/watch?v=25HPlSOEGow" target="_blank" rel="noopener noreferrer">video ↗</a>)</span>
+      </div>
+    </div>
+
+    <div class="prompt" id="prompt">
+      <div class="tutorial-line show" id="tutorial-line">
+        <div>You are experiencing the final moment of Dec 31.</div>
+        <div class="fade-init" id="tut-line-2">The Big Bang occurred on Jan 1, 00:00 AM.</div>
+      </div>
+      <div class="prompt-question-row fade-init">
+        <span></span>
+        <span class="prompt-question">When did this event happen?</span>
+        <span class="counter" id="ev-counter">— / —</span>
+      </div>
+      <div class="prompt-line fade-init">
+        <span class="name" id="ev-name">—</span>
+      </div>
+    </div>
+
+    <div class="readout fade-init" id="readout">
+      <span id="readout-date">—</span>
+      <span class="since" id="readout-ago">—</span>
+    </div>
+
+    <div class="controls fade-init" id="controls">
+      <div class="slider-row">
+        <button class="nudge-btn" id="nudge-down" title="Earlier by one step">−</button>
+        <input type="range" id="slider" min="1" max="365" step="1" value="1">
+        <button class="nudge-btn" id="nudge-up" title="Later by one step">+</button>
+      </div>
+      <div class="slider-labels">
+        <span id="slider-min-label">Jan 1</span>
+        <span id="slider-mid-label"></span>
+        <span id="slider-max-label">Dec 31</span>
+      </div>
+    </div>
+
+    <div class="button-row fade-init" id="button-row">
+      <button id="guess-btn">Pinpoint</button>
+    </div>
+
+    <div class="viz fade-init" id="viz">
+      <svg id="calendar-svg" viewBox="0 0 800 420"></svg>
+      <div id="clock-wrap">
+        <svg id="clock-svg" viewBox="0 0 220 220"></svg>
+        <div class="clock-caption">December 31 · 24 hours</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  by <a href="https://pelzer.blog" target="_blank" rel="noopener noreferrer">Thorben Pelzer</a> via Claude Opus 4.7
+</footer>
+
+<div id="score-popup"><div class="pop-main"></div><div class="pop-sub"></div></div>
+
+<script>
+"use strict";
+
+// ============================================================================
+// Constants & time helpers
+// ============================================================================
+const COSMIC_YEAR_SECONDS = 365 * 86400;
+const REAL_YEARS_TOTAL    = 13.8e9;
+const REAL_YEARS_PER_COSMIC_SECOND = REAL_YEARS_TOTAL / COSMIC_YEAR_SECONDS;
+const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+const MONTH_NAMES   = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTH_SHORT   = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function dayOfYear(month, day) {
+  let d = day;
+  for (let i = 0; i < month - 1; i++) d += DAYS_IN_MONTH[i];
+  return d;
+}
+function monthDayFromDayOfYear(doy) {
+  let d = doy;
+  for (let i = 0; i < 12; i++) {
+    if (d <= DAYS_IN_MONTH[i]) return { month: i + 1, day: d };
+    d -= DAYS_IN_MONTH[i];
+  }
+  return { month: 12, day: 31 };
+}
+function dateToT(month, day, hour=0, min=0, sec=0) {
+  const doy = dayOfYear(month, day);
+  const elapsedSec = (doy - 1) * 86400 + hour * 3600 + min * 60 + sec;
+  return elapsedSec / COSMIC_YEAR_SECONDS;
+}
+function tToParts(t) {
+  const totalSec = Math.max(0, Math.min(COSMIC_YEAR_SECONDS - 0.0001, t * COSMIC_YEAR_SECONDS));
+  const doy = Math.floor(totalSec / 86400) + 1;
+  const md  = monthDayFromDayOfYear(doy);
+  const rem = totalSec - (doy - 1) * 86400;
+  const sec = rem % 60; // keep sub-second portion intact
+  return { month: md.month, day: md.day, hour: Math.floor(rem / 3600), min: Math.floor((rem % 3600) / 60), sec };
+}
+function formatT(t, showTime) {
+  const p = tToParts(t);
+  if (showTime) {
+    const sInt = Math.floor(p.sec);
+    const sFrac = p.sec - sInt;
+    const subPart = sFrac >= 0.0005 ? `.${String(Math.round(sFrac * 1000)).padStart(3,'0')}` : '';
+    const time = `${String(p.hour).padStart(2,"0")}:${String(p.min).padStart(2,"0")}:${String(sInt).padStart(2,"0")}${subPart}`;
+    return `${MONTH_SHORT[p.month - 1]} ${p.day}, ${time}`;
+  }
+  return `${MONTH_SHORT[p.month - 1]} ${p.day}`;
+}
+const CURRENT_YEAR = 2026;
+// Convert "years ago" to a calendar year tag (CE / BCE). Returns null for
+// events older than ~10,000 BCE.
+function calendarYearTag(yearsAgo) {
+  if (yearsAgo > CURRENT_YEAR + 10000 - 1) return null; // older than 10,000 BCE
+  if (yearsAgo < 0.5) return `${CURRENT_YEAR} CE`;
+  const yearNum = CURRENT_YEAR - Math.round(yearsAgo);
+  return yearNum > 0 ? `${yearNum} CE` : `${1 - yearNum} BCE`;
+}
+function formatRealYearsAgo(t) {
+  const yearsAgo = Math.max(0, (1 - t) * REAL_YEARS_TOTAL);
+  let base;
+  // Finer precision at small scales so every slider step visibly changes the readout.
+  if (yearsAgo >= 1e9)      base = `${(yearsAgo / 1e9).toFixed(2)} billion years ago`;
+  else if (yearsAgo >= 1e6) base = `${(yearsAgo / 1e6).toFixed(1)} million years ago`;
+  else if (yearsAgo >= 1e3) base = `${(yearsAgo / 1e3).toFixed(1)} thousand years ago`;
+  else if (yearsAgo >= 100) base = `${Math.round(yearsAgo)} years ago`;
+  else if (yearsAgo >= 1)   base = `${yearsAgo.toFixed(1)} years ago`;
+  else if (yearsAgo >= 0.05) base = `${yearsAgo.toFixed(2)} years ago`;
+  else                       base = 'today';
+  const tag = calendarYearTag(yearsAgo);
+  return tag ? `${base} (${tag})` : base;
+}
+function formatOffBy(deltaT) {
+  const cosmicSec = Math.abs(deltaT) * COSMIC_YEAR_SECONDS;
+  const realYears = cosmicSec * REAL_YEARS_PER_COSMIC_SECOND;
+  let cosmic;
+  if (cosmicSec >= 30 * 86400) cosmic = `${(cosmicSec / 86400 / 30).toFixed(1)} cosmic months`;
+  else if (cosmicSec >= 86400) cosmic = `${(cosmicSec / 86400).toFixed(1)} cosmic days`;
+  else if (cosmicSec >= 3600)  cosmic = `${(cosmicSec / 3600).toFixed(1)} cosmic hours`;
+  else if (cosmicSec >= 60)    cosmic = `${(cosmicSec / 60).toFixed(1)} cosmic minutes`;
+  else                         cosmic = `${cosmicSec.toFixed(1)} cosmic seconds`;
+  let real;
+  if (realYears >= 1e9)      real = `${(realYears / 1e9).toFixed(2)} Gyr`;
+  else if (realYears >= 1e6) real = `${(realYears / 1e6).toFixed(1)} Myr`;
+  else if (realYears >= 1e3) real = `${(realYears / 1e3).toFixed(1)} kyr`;
+  else                       real = `${realYears.toFixed(0)} yr`;
+  return `${cosmic} (≈ ${real})`;
+}
+
+// ============================================================================
+// Event pool — every row from the Wikipedia Cosmic Calendar table
+// ============================================================================
+const ALL_EVENTS = [
+  { name: "The Big Bang",                            slug: "Big_Bang",                                       desc: "Space, time, and the laws of physics begin. The universe is unimaginably hot and dense.",                month: 1,  day: 1,  hour: 0,  min: 0,  sec: 0 },
+  { name: "First galaxies form",                     slug: "Galaxy_formation_and_evolution",                 desc: "Gas and dark matter clump together to form the universe's first galaxies.",                              month: 1,  day: 26 },
+  { name: "The Milky Way Galaxy forms",              slug: "Milky_Way",                                      desc: "Our home galaxy takes shape from the merger of many smaller protogalaxies.",                             month: 3,  day: 1 },
+  { name: "The Milky Way disk forms",                slug: "Galactic_disc",                                  desc: "The Milky Way's flat, spinning disc of stars settles into the shape we recognise today.",                month: 5,  day: 13 },
+  { name: "Formation of the Solar System",           slug: "Formation_and_evolution_of_the_Solar_System",    desc: "A spinning cloud of gas and dust collapses to form the Sun and the planets.",                            month: 9,  day: 9 },
+  { name: "Formation of Earth and the Moon",         slug: "Earthrise",                                      desc: "Earth grows by accretion. Soon after, a Mars-sized impactor strikes and the debris becomes the Moon.",    month: 9,  day: 14 },
+  { name: "First known biotic life remains",         slug: "Earliest_known_life_forms",                      desc: "The oldest chemical fingerprints of life on Earth — traces locked in ancient rocks.",                    month: 9,  day: 14 },
+  { name: "First life (prokaryotes)",                slug: "Prokaryote",                                     desc: "Single-celled organisms without a nucleus appear in Earth's oceans.",                                    month: 9,  day: 21 },
+  { name: "Photosynthesis evolves",                  slug: "Stromatolite",                                   desc: "Cyanobacteria learn to turn sunlight into food, slowly pumping oxygen into the atmosphere. The earliest fossil evidence — these ancient layered rocks — survives today.", month: 9,  day: 30 },
+  { name: "Oxygenation of the atmosphere",           slug: "Great_Oxidation_Event",                          desc: "Free oxygen builds up in the air for the first time — a disaster for most existing life.",              month: 10, day: 29 },
+  { name: "First eukaryotes — cells with a nucleus", slug: "Eukaryote",                                      desc: "Cells with a nucleus and internal machinery appear — the foundation for all plants and animals.",        month: 11, day: 9 },
+  { name: "First multicellular life",                slug: "Multicellular_organism",                         desc: "Cells start sticking together and sharing work — the first true bodies.",                                month: 12, day: 5 },
+  { name: "Simple animals appear",                   slug: "Animal",                                         desc: "The earliest soft-bodied animals — sponges and jellyfish-like creatures — appear.",                      month: 12, day: 7 },
+  { name: "Arthropods (jointed-legged animals) evolve", slug: "Arthropod",                                   desc: "Animals with hard exoskeletons and jointed legs become the first major animal group.",                    month: 12, day: 14 },
+  { name: "Fish and proto-amphibians",               slug: "Fish",                                           desc: "Vertebrates with skeletons begin to dominate the seas.",                                                  month: 12, day: 17 },
+  { name: "Vertebrates spread",                      slug: "Vertebrate",                                     desc: "Animals with backbones diversify rapidly into countless new forms.",                                      month: 12, day: 18 },
+  { name: "Land plants colonise the continents",     slug: "Embryophyte",                                    desc: "Plants leave the water and start covering the bare continents in green.",                                month: 12, day: 19 },
+  { name: "Jawed fish",                              slug: "Gnathostomata",                                  desc: "Predatory fish with hinged jaws appear, completely changing the food chain.",                            month: 12, day: 20 },
+  { name: "Insects and seeds appear",                slug: "Insect",                                         desc: "Insects take to the air, while plants invent seeds to spread further on land.",                          month: 12, day: 21 },
+  { name: "Amphibians evolve",                       slug: "Amphibian",                                      desc: "The first four-legged animals crawl out of the water onto land.",                                        month: 12, day: 22 },
+  { name: "First reptiles",                          slug: "Reptile",                                        desc: "Egg-laying land animals appear — no longer needing water to reproduce.",                                 month: 12, day: 23 },
+  { name: "Permian–Triassic extinction event",       slug: "Permian%E2%80%93Triassic_extinction_event",      desc: "The 'Great Dying' — Earth's worst extinction wipes out about 95% of all species.",                       month: 12, day: 24 },
+  { name: "Dinosaurs appear",                        slug: "Dinosaur",                                       desc: "Reptilian giants begin a reign that will last 165 million years.",                                       month: 12, day: 25 },
+  { name: "Mammals appear",                          slug: "Mammal",                                         desc: "Small, furry, warm-blooded animals appear alongside the dinosaurs.",                                     month: 12, day: 26 },
+  { name: "Birds (avian dinosaurs)",                 slug: "Bird",                                           desc: "Feathered, flying dinosaurs evolve into the birds we know today.",                                       month: 12, day: 27 },
+  { name: "Flowers evolve",                          slug: "Flowering_plant",                                desc: "Plants invent flowers and fruit, co-evolving with insect pollinators.",                                  month: 12, day: 28 },
+  { name: "Dinosaurs go extinct (K–Pg event)",       slug: "Cretaceous%E2%80%93Paleogene_extinction_event",  desc: "A 10 km asteroid strikes what is now Mexico, ending the age of the dinosaurs.",                          month: 12, day: 30, hour: 6,  min: 24 },
+  { name: "Apes evolve",                             slug: "Ape",                                            desc: "The first apes appear, swinging through the trees of Africa and Asia.",                                  month: 12, day: 31, hour: 6,  min: 5 },
+  { name: "Hominids appear",                         slug: "Hominidae",                                      desc: "Great apes — the family of orangutans, gorillas, chimps, and us — branch off.",                          month: 12, day: 31, hour: 14, min: 24 },
+  { name: "Chimpanzees and humans split",            slug: "Sahelanthropus",                                 desc: "The lineages leading to modern chimps and to modern humans diverge in Africa.",                          month: 12, day: 31, hour: 20, min: 0 },
+  { name: "Genus Homo appears",                      slug: "Homo",                                           desc: "Our own genus appears in Africa.",                                                                       month: 12, day: 31, hour: 22, min: 24 },
+  { name: "Earliest stone tools",                    slug: "Oldowan",                                        desc: "The first deliberately-shaped sharp tools — flakes of stone struck with another stone.",                 month: 12, day: 31, hour: 22, min: 24 },
+  { name: "Domestication of fire",                   slug: "Control_of_fire_by_early_humans",                desc: "Early humans learn to start and control fire — for warmth, cooking, and protection.",                    month: 12, day: 31, hour: 23, min: 44 },
+  { name: "Anatomically modern humans",              slug: "Anatomically_modern_human",                      desc: "Homo sapiens appears in Africa, looking essentially like us today.",                                     month: 12, day: 31, hour: 23, min: 52 },
+  { name: "Last glacial period begins",              slug: "Last_Glacial_Period",                            desc: "Huge ice sheets advance across the northern continents.",                                                month: 12, day: 31, hour: 23, min: 55 },
+  { name: "First sculptures",                        slug: "Venus_figurines",                                desc: "Humans begin to carve small figurines from bone, ivory and stone.",                                      month: 12, day: 31, hour: 23, min: 58 },
+  { name: "First cave paintings",                    slug: "Cave_painting",                                  desc: "People begin to paint animals and hands on the walls of deep caves.",                                    month: 12, day: 31, hour: 23, min: 58 },
+  { name: "Invention of agriculture",                slug: "Agriculture",                                    desc: "People stop wandering and begin to farm wheat, barley, and rice.",                                       month: 12, day: 31, hour: 23, min: 59, sec: 32 },
+  { name: "End of the last Ice Age",                 slug: "Holocene",                                       desc: "The ice sheets retreat, sea levels rise, and the climate becomes mild.",                                 month: 12, day: 31, hour: 23, min: 59, sec: 33 },
+  { name: "Flooding of Doggerland",                  slug: "Doggerland",                                     desc: "Rising seas swallow the land bridge that once joined Britain to mainland Europe.",                       month: 12, day: 31, hour: 23, min: 59, sec: 41 },
+  { name: "Chalcolithic begins",                     slug: "Copper",                                         desc: "People start working with copper alongside their stone tools.",                                          month: 12, day: 31, hour: 23, min: 59, sec: 46 },
+  { name: "Early Bronze Age begins",                 slug: "Bronze_Age",                                     desc: "People begin smelting tin and copper into bronze, the first useful alloy.",                              month: 12, day: 31, hour: 23, min: 59, sec: 47 },
+  { name: "Proto-writing",                           slug: "Proto-writing",                                  desc: "The first symbol systems begin to record numbers, goods and names.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 47 },
+  { name: "Early Egyptian dynasties",                slug: "Early_Dynastic_Period_(Egypt)",                  desc: "Upper and Lower Egypt unite under the first pharaohs along the Nile.",                                   month: 12, day: 31, hour: 23, min: 59, sec: 48 },
+  { name: "Indus Valley civilisation",               slug: "Indus_Valley_Civilisation",                      desc: "Planned cities rise along the Indus river, with sewers, baths and standardised bricks.",                 month: 12, day: 31, hour: 23, min: 59, sec: 48 },
+  { name: "First alphabets",                         slug: "Proto-Sinaitic_script",                          desc: "Symbols start standing for individual sounds rather than whole words.",                                  month: 12, day: 31, hour: 23, min: 59, sec: 49 },
+  { name: "Invention of the wheel",                  slug: "Wheel",                                          desc: "Wheeled vehicles begin to move goods, soldiers, and ideas faster than ever before.",                     month: 12, day: 31, hour: 23, min: 59, sec: 49 },
+  { name: "Akkadian Empire",                         slug: "Akkadian_Empire",                                desc: "Sargon of Akkad welds Mesopotamian city-states into the world's first empire.",                          month: 12, day: 31, hour: 23, min: 59, sec: 49 },
+  { name: "Code of Hammurabi",                       slug: "Code_of_Hammurabi",                              desc: "The Babylonian king Hammurabi writes one of the earliest known law codes.",                              month: 12, day: 31, hour: 23, min: 59, sec: 51 },
+  { name: "Late Bronze Age collapse",                slug: "Late_Bronze_Age_collapse",                       desc: "A web of Bronze-Age civilisations collapses almost simultaneously.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 52 },
+  { name: "Iron Age begins",                         slug: "Phoenicia",                                      desc: "Iron tools become widespread; the Phoenicians spread an alphabet across the Mediterranean.",             month: 12, day: 31, hour: 23, min: 59, sec: 53 },
+  { name: "Classical antiquity begins",              slug: "Classical_antiquity",                            desc: "Greek and Persian cultures lay the foundations of European philosophy, science and art.",                month: 12, day: 31, hour: 23, min: 59, sec: 53 },
+  { name: "Buddha is born",                          slug: "Gautama_Buddha",                                 desc: "Siddhartha Gautama is born in what is now Nepal. He will found a way of thinking that reshapes Asia.",   month: 12, day: 31, hour: 23, min: 59, sec: 54 },
+  { name: "Confucius is born",                       slug: "Confucius",                                      desc: "The Chinese philosopher Kong Fuzi is born. His ethics of harmony, family and ritual will shape East Asia.", month: 12, day: 31, hour: 23, min: 59, sec: 54 },
+  { name: "Classical Greece",                        slug: "Classical_Greece",                               desc: "Athens, Plato and Aristotle set patterns that European thought will keep returning to.",                 month: 12, day: 31, hour: 23, min: 59, sec: 54 },
+  { name: "Roman Empire founded",                    slug: "Roman_Empire",                                   desc: "Augustus becomes the first emperor; Rome will rule the Mediterranean basin for centuries.",              month: 12, day: 31, hour: 23, min: 59, sec: 55 },
+  { name: "Jesus is born",                           slug: "Jesus",                                          desc: "A Jewish preacher is born in Roman-occupied Judea. The movement around him becomes Christianity.",        month: 12, day: 31, hour: 23, min: 59, sec: 55 },
+  { name: "Invention of zero",                       slug: "Bakhshali_manuscript",                           desc: "Indian mathematicians give the number zero its modern form, transforming arithmetic.",                   month: 12, day: 31, hour: 23, min: 59, sec: 55 },
+  { name: "Muhammad is born",                        slug: "Muhammad",                                       desc: "Muhammad is born in Mecca. He will found Islam, which spreads rapidly across three continents.",          month: 12, day: 31, hour: 23, min: 59, sec: 56 },
+  { name: "Maya civilisation peaks",                 slug: "Maya_civilization",                              desc: "The Maya build vast stone cities, develop hieroglyphic writing and astonishingly precise astronomy.",     month: 12, day: 31, hour: 23, min: 59, sec: 56 },
+  { name: "Mongol Empire founded",                   slug: "Mongol_Empire",                                  desc: "Genghis Khan unites the steppe tribes; his successors build the largest contiguous empire in history.",  month: 12, day: 31, hour: 23, min: 59, sec: 58 },
+  { name: "European Renaissance begins",             slug: "Renaissance",                                    desc: "Art, science and humanist thought blossom across Italy and then all of Europe.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58 },
+  { name: "Modern period of history begins",         slug: "Age_of_Discovery",                               desc: "Printing presses, gunpowder, global navigation — the modern world takes shape.",                         month: 12, day: 31, hour: 23, min: 59, sec: 59 },
+  // Required last three — sub-second precision, the very edge of the cosmic year.
+  { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 59.806, required: true },
+  { name: "World Wide Web released",                 slug: "World_Wide_Web",                                 desc: "Tim Berners-Lee makes the Web public from CERN, turning the internet into something everyone can browse.", month: 12, day: 31, hour: 23, min: 59, sec: 59.920, required: true },
+  { name: "ChatGPT released",                        slug: "ChatGPT",                                        desc: "A general-purpose language model becomes a consumer product, putting AI in front of hundreds of millions.", month: 12, day: 31, hour: 23, min: 59, sec: 59.991, required: true },
+];
+ALL_EVENTS.forEach(e => { e.hour = e.hour || 0; e.min = e.min || 0; e.sec = e.sec || 0; e.t = dateToT(e.month, e.day, e.hour, e.min, e.sec); });
+
+// Stratified sample. Spread across the whole year (late-Dec compression is part
+// of the cosmic-calendar reveal but we still want events earlier in the year too).
+// The last three events are always: first computer → WWW → ChatGPT.
+const REQUIRED_FINAL = ALL_EVENTS.filter(e => e.required).sort((a, b) => a.t - b.t);
+const TUTORIAL_EVENT = ALL_EVENTS.find(e => e.name === 'The Big Bang');
+function sampleEvents() {
+  const pool = ALL_EVENTS.filter(e => !e.required && e !== TUTORIAL_EVENT);
+  const buckets = [
+    pool.filter(e => e.month <= 2),                                                              // early universe
+    pool.filter(e => e.month >= 3 && e.month <= 8),                                              // mid universe / star formation
+    pool.filter(e => e.month >= 9 && e.month <= 11),                                             // solar system + early life
+    pool.filter(e => e.month === 12 && e.day < 30),                                              // pre-Dec-31 biology/evolution
+    pool.filter(e => e.month === 12 && (e.day === 30 || (e.day === 31 && e.hour < 23))),         // dinosaurs end / early apes
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min < 59),             // recent humans
+    pool.filter(e => e.month === 12 && e.day === 31 && e.hour === 23 && e.min === 59),           // last cosmic minute (recorded history)
+  ];
+  // Fisher-Yates shuffle — proper uniform random; sort-by-Math.random comparator is biased.
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  // Pick *fewer* than each bucket holds, so there is genuine randomness even
+  // in the sparse early-universe months. perBucket[1] is capped at 1 so we
+  // never show both Milky-Way events in the same round.
+  const perBucket = [1, 1, 2, 2, 1, 1, 1]; // 9, plus the 3 REQUIRED_FINAL = 12 total
+  const picked = [];
+  for (let i = 0; i < buckets.length; i++) {
+    picked.push(...shuffle(buckets[i]).slice(0, perBucket[i]));
+  }
+  picked.push(...REQUIRED_FINAL);
+  picked.sort((a, b) => a.t - b.t);
+  return picked;
+}
+
+// ============================================================================
+// Scoring
+// ============================================================================
+function scoreForGuess(deltaT) {
+  const cosmicSec = Math.abs(deltaT) * COSMIC_YEAR_SECONDS;
+  const realYears = Math.max(1, cosmicSec * REAL_YEARS_PER_COSMIC_SECOND);
+  const raw = 1000 - Math.log10(realYears) * 100;
+  return Math.max(0, Math.min(1000, Math.round(raw)));
+}
+
+// ============================================================================
+// Sound
+// ============================================================================
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { audioCtx = null; }
+  }
+  return audioCtx;
+}
+function playTone(freq, duration, type='sine', volume=0.06, delay=0) {
+  if (state.muted) return;
+  const ctx = getCtx();
+  if (!ctx) return;
+  const start = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.05);
+}
+function soundClick()   { playTone(560, 0.06, 'triangle', 0.04); }
+function soundTick()    { playTone(880, 0.02, 'triangle', 0.02); }
+function soundChime(score) {
+  const base = 392 + (score / 1000) * 200; // G4 → ~D5
+  playTone(base,        0.18, 'sine', 0.07, 0);
+  playTone(base * 1.25, 0.22, 'sine', 0.07, 0.09);
+  if (score >= 700) playTone(base * 1.5, 0.28, 'sine', 0.06, 0.20);
+  if (score >= 900) playTone(base * 2.0, 0.34, 'sine', 0.05, 0.32);
+}
+// Pitch-sweep variant of playTone — for the dramatic foghorn rise.
+function playSweep(fStart, fEnd, duration, type='sawtooth', volume=0.1, delay=0) {
+  if (state.muted) return;
+  const ctx = getCtx();
+  if (!ctx) return;
+  const start = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(fStart, start);
+  osc.frequency.exponentialRampToValueAtTime(fEnd, start + duration);
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.08);
+  gain.gain.setValueAtTime(volume, start + duration - 0.2);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.05);
+}
+// Three-pulse rising klaxon. Used for BOTH scale transitions (entering Dec 31
+// clock and entering the final cosmic second).
+function soundAlarm() {
+  if (state.muted) return;
+  playTone(110, 0.40, 'sawtooth', 0.17, 0);
+  playTone(220, 0.40, 'triangle', 0.07, 0);
+  playTone(147, 0.40, 'sawtooth', 0.17, 0.45);
+  playTone(294, 0.40, 'triangle', 0.07, 0.45);
+  playTone(165, 0.55, 'sawtooth', 0.17, 0.90);
+  playTone(330, 0.55, 'triangle', 0.07, 0.90);
+}
+
+// ============================================================================
+// Wikipedia info lookup (cached)
+// ============================================================================
+const summaryCache = new Map();
+async function fetchSummary(slug) {
+  if (summaryCache.has(slug)) return summaryCache.get(slug);
+  const promise = (async () => {
+    try {
+      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${slug}?redirect=true`;
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) { return null; }
+  })();
+  summaryCache.set(slug, promise);
+  return promise;
+}
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const imageMetaCache = new Map();
+async function fetchImageMeta(thumbUrl) {
+  if (!thumbUrl) return null;
+  if (imageMetaCache.has(thumbUrl)) return imageMetaCache.get(thumbUrl);
+  // Only Commons-hosted files have explicit free-licence metadata
+  const cm = thumbUrl.match(/\/wikipedia\/commons\/(?:thumb\/)?[a-f0-9]\/[a-f0-9]{2}\/([^/?#]+?)(?:\/[^/]+)?(?:$|[?#])/);
+  if (!cm) { imageMetaCache.set(thumbUrl, null); return null; }
+  const filename = decodeURIComponent(cm[1]);
+  const promise = (async () => {
+    try {
+      const url = `https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo&iiprop=extmetadata%7Curl&titles=${encodeURIComponent('File:' + filename)}&format=json&origin=*`;
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      const j = await r.json();
+      const pages = j.query?.pages;
+      if (!pages) return null;
+      const page = Object.values(pages)[0];
+      const info = page?.imageinfo?.[0];
+      if (!info) return null;
+      const meta = info.extmetadata || {};
+      const stripTags = s => s ? s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+      return {
+        filename,
+        license: stripTags(meta.LicenseShortName?.value) || stripTags(meta.UsageTerms?.value) || 'See source',
+        artist:  stripTags(meta.Artist?.value) || 'Unknown',
+        licenseUrl: meta.LicenseUrl?.value || null,
+        descriptionUrl: info.descriptionurl || `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(filename)}`,
+      };
+    } catch (e) { return null; }
+  })();
+  imageMetaCache.set(thumbUrl, promise);
+  return promise;
+}
+
+// ============================================================================
+// Game state
+// ============================================================================
+const state = {
+  events: [],
+  idx: 0,
+  totalScore: 0,
+  results: [],
+  mode: 'day',           // 'day' | 'time'
+  dayValue: 1,           // day of year 1..365
+  timeValue: 0,          // seconds of day 0..86399
+  phase: 'guessing',     // 'guessing' | 'revealed' | 'done'
+  muted: localStorage.getItem('cosmic-muted') === '1',
+  firedTimeAlarm:   false,
+  firedHourAlarm:   false,
+  firedMinuteAlarm: false,
+  firedFinalAlarm:  false,
+};
+
+function currentGuessT() {
+  if (state.mode === 'time') {
+    const baseDays = dayOfYear(12, 31) - 1; // 364
+    return (baseDays * 86400 + state.timeValue) / COSMIC_YEAR_SECONDS;
+  }
+  // Day mode: snap to the start of the chosen day. Below Dec 31 we don't track
+  // time-of-day at all — the player's resolution is exactly one cosmic day.
+  return (state.dayValue - 1) / 365;
+}
+function currentEvent() { return state.events[state.idx]; }
+
+// ============================================================================
+// DOM cache
+// ============================================================================
+const $ = id => document.getElementById(id);
+const slider     = $('slider');
+const guessBtn   = $('guess-btn');
+const muteBtn    = $('mute-btn');
+const nudgeDown  = $('nudge-down');
+const nudgeUp    = $('nudge-up');
+const calSvg     = $('calendar-svg');
+const clockSvg   = $('clock-svg');
+const clockWrap  = $('clock-wrap');
+const vizDiv     = $('viz');
+const infoBox    = $('info-box');
+const infoImg    = $('info-img');
+const infoNoImg  = $('info-no-image');
+const infoTitle  = $('info-title');
+const infoDesc   = $('info-desc');
+const infoMeta   = $('info-meta');
+const scorePopup = $('score-popup');
+
+// ============================================================================
+// Calendar (4 cols × 3 rows of months)
+// ============================================================================
+const CAL_W = 800, CAL_H = 420;
+const CAL_PAD = 8;
+const CAL_COLS = 4, CAL_ROWS = 3;
+const CELL_W = (CAL_W - CAL_PAD * 2) / CAL_COLS;     // 196
+const CELL_H = (CAL_H - CAL_PAD * 2) / CAL_ROWS;     // 134.67
+const HEADER_H = 22;
+const DAY_COLS = 7, DAY_ROWS = 5;
+const DAY_PAD_X = 8, DAY_PAD_Y = 4;
+const DAY_W = (CELL_W - DAY_PAD_X * 2) / DAY_COLS;   // ~25.7
+const DAY_H = (CELL_H - HEADER_H - DAY_PAD_Y * 2) / DAY_ROWS; // ~21
+
+function dayCellRect(monthIdx, dayInMonth) {
+  const col = monthIdx % CAL_COLS;
+  const row = Math.floor(monthIdx / CAL_COLS);
+  const cellX = CAL_PAD + col * CELL_W;
+  const cellY = CAL_PAD + row * CELL_H;
+  const dayCol = (dayInMonth - 1) % DAY_COLS;
+  const dayRow = Math.floor((dayInMonth - 1) / DAY_COLS);
+  return {
+    x: cellX + DAY_PAD_X + dayCol * DAY_W + 1,
+    y: cellY + HEADER_H + DAY_PAD_Y + dayRow * DAY_H + 1,
+    w: DAY_W - 2,
+    h: DAY_H - 2,
+    cx: cellX + DAY_PAD_X + dayCol * DAY_W + DAY_W / 2,
+    cy: cellY + HEADER_H + DAY_PAD_Y + dayRow * DAY_H + DAY_H / 2,
+  };
+}
+
+function colourForDayProgress(p) {
+  // p ∈ [0, 1]: 0 = Jan 1, 1 = Dec 31. Gradient deep-purple → magenta → orange → gold.
+  const stops = [
+    [0.00, [58, 40, 104]],
+    [0.50, [122, 58, 138]],
+    [0.85, [216, 99, 76]],
+    [1.00, [255, 212, 121]],
+  ];
+  for (let i = 1; i < stops.length; i++) {
+    if (p <= stops[i][0]) {
+      const a = stops[i - 1], b = stops[i];
+      const t = (p - a[0]) / (b[0] - a[0]);
+      const c = [0,1,2].map(k => Math.round(a[1][k] + (b[1][k] - a[1][k]) * t));
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+  }
+  return `rgb(${stops.at(-1)[1].join(',')})`;
+}
+
+function drawCalendar() {
+  const cur = state.dayValue; // day of year 1..365
+  const curMD = monthDayFromDayOfYear(cur);
+
+  let s = '';
+
+  for (let m = 0; m < 12; m++) {
+    const col = m % CAL_COLS;
+    const row = Math.floor(m / CAL_COLS);
+    const cellX = CAL_PAD + col * CELL_W;
+    const cellY = CAL_PAD + row * CELL_H;
+
+    const monthIsPast = (m + 1) < curMD.month;
+    const monthIsCurrent = (m + 1) === curMD.month;
+    const bgClass = monthIsCurrent ? 'month-cell-bg current' : (monthIsPast ? 'month-cell-bg passed' : 'month-cell-bg');
+
+    s += `<rect x="${cellX + 2}" y="${cellY + 2}" width="${CELL_W - 4}" height="${CELL_H - 4}" rx="6" class="${bgClass}"/>`;
+    s += `<text x="${cellX + 10}" y="${cellY + 16}" class="month-name ${monthIsCurrent ? 'current' : ''}">${MONTH_NAMES[m].toUpperCase()}</text>`;
+
+    const daysInMonth = DAYS_IN_MONTH[m];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const doy = dayOfYear(m + 1, d);
+      const rect = dayCellRect(m, d);
+
+      let fill, cls, numClass = '';
+      if (doy < cur) {
+        fill = colourForDayProgress(doy / 365);
+        cls = 'day-cell passed';
+        numClass = 'passed';
+      } else if (doy === cur) {
+        fill = state.mode === 'time' ? '#ff7a59' : '#ffd479';
+        cls = `day-cell current ${state.mode === 'time' ? 'time-mode' : ''}`;
+        numClass = 'current';
+      } else {
+        fill = '#1e1e3c';
+        cls = 'day-cell future';
+        numClass = 'future';
+      }
+      s += `<rect x="${rect.x}" y="${rect.y}" width="${rect.w}" height="${rect.h}" rx="2" fill="${fill}" class="${cls}" data-doy="${doy}"/>`;
+      s += `<text x="${rect.cx}" y="${rect.cy + 3}" class="day-num ${numClass}">${d}</text>`;
+    }
+  }
+  calSvg.innerHTML = s;
+}
+
+// click on day cell → set slider (day-mode only; locked days are ignored)
+calSvg.addEventListener('click', (e) => {
+  const t = e.target;
+  if (!t || t.tagName !== 'rect' || !t.dataset.doy) return;
+  if (state.phase !== 'guessing' || state.mode !== 'day') return;
+  const doy = parseInt(t.dataset.doy, 10);
+  if (doy < sliderMinForMode('day')) return;
+  state.dayValue = doy;
+  slider.value = doy;
+  soundTick();
+  updateAll();
+});
+
+// Clock interactivity — click or drag to set time-of-day (Dec 31 mode only).
+function setTimeFromClockEvent(e) {
+  if (state.phase !== 'guessing' || state.mode !== 'time') return;
+  const rect = clockSvg.getBoundingClientRect();
+  const cx = rect.left + rect.width  / 2;
+  const cy = rect.top  + rect.height / 2;
+  let ang = Math.atan2(e.clientY - cy, e.clientX - cx) + Math.PI / 2;
+  if (ang < 0) ang += 2 * Math.PI;
+  const frac = ang / (2 * Math.PI);  // 0..1 around the dial
+  const scale = clockScaleForEvent(currentEvent());
+  let sec;
+  if (scale) {
+    sec = scale.start + frac * scale.span;
+    sec = scale.step < 1
+      ? Math.round(sec / scale.step) * scale.step
+      : Math.round(sec);
+  } else {
+    sec = Math.round(frac * 86400);
+  }
+  const minSec = sliderMinForMode('time');
+  sec = Math.max(minSec, Math.min(86400, sec));
+  if (sec === state.timeValue) return;
+  state.timeValue = sec;
+  slider.value = sec;
+  soundTick();
+  updateAll();
+}
+let clockDragging = false;
+clockSvg.style.cursor = 'pointer';
+clockSvg.addEventListener('mousedown', (e) => { clockDragging = true; setTimeFromClockEvent(e); e.preventDefault(); });
+window.addEventListener('mousemove', (e) => { if (clockDragging) setTimeFromClockEvent(e); });
+window.addEventListener('mouseup',   () => { clockDragging = false; });
+clockSvg.addEventListener('touchstart', (e) => { clockDragging = true; if (e.touches[0]) setTimeFromClockEvent(e.touches[0]); }, { passive: true });
+clockSvg.addEventListener('touchmove',  (e) => { if (clockDragging && e.touches[0]) setTimeFromClockEvent(e.touches[0]); }, { passive: true });
+window.addEventListener('touchend', () => { clockDragging = false; });
+
+// ============================================================================
+// Clock (24h, only visible in Dec 31 / time mode)
+// ============================================================================
+function drawClock() {
+  const cx = 110, cy = 110, r = 92;
+  const ev = currentEvent();
+  const scale = clockScaleForEvent(ev);
+  let s = `<circle cx="${cx}" cy="${cy}" r="${r}" class="clock-face"/>`;
+
+  if (!scale) {
+    clockSvg.innerHTML = s;
+    return;
+  }
+
+  // Position within the dial's span
+  const subVal = state.timeValue - scale.start;
+  const frac   = Math.max(0, Math.min(1, subVal / scale.span));
+
+  // Ticks + labels
+  for (let i = 0; i < scale.ticks; i++) {
+    const ang = i / scale.ticks * Math.PI * 2 - Math.PI / 2;
+    const major = (i % scale.majorEvery) === 0;
+    const inner = r - (major ? 14 : 7);
+    const x1 = cx + Math.cos(ang) * (r - 3);
+    const y1 = cy + Math.sin(ang) * (r - 3);
+    const x2 = cx + Math.cos(ang) * inner;
+    const y2 = cy + Math.sin(ang) * inner;
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${major ? 'clock-tick-major' : 'clock-tick'}"/>`;
+    if (major) {
+      const lx = cx + Math.cos(ang) * (r - 26);
+      const ly = cy + Math.sin(ang) * (r - 26) + 4;
+      s += `<text x="${lx}" y="${ly}" class="clock-hour-label">${escapeHtml(scale.labelFn(i))}</text>`;
+    }
+  }
+
+  // Filled arc
+  if (frac > 0) {
+    const endAng = frac * Math.PI * 2 - Math.PI / 2;
+    const ex = cx + Math.cos(endAng) * (r - 4);
+    const ey = cy + Math.sin(endAng) * (r - 4);
+    const large = frac > 0.5 ? 1 : 0;
+    s += `<path d="M ${cx} ${cy} L ${cx} ${cy - (r - 4)} A ${r - 4} ${r - 4} 0 ${large} 1 ${ex} ${ey} Z" class="clock-fill"/>`;
+  }
+
+  // Main hand (sweeps once per dial span)
+  const handAng = frac * Math.PI * 2 - Math.PI / 2;
+  const hx = cx + Math.cos(handAng) * (r - 16);
+  const hy = cy + Math.sin(handAng) * (r - 16);
+  s += `<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" class="clock-hand"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="4" fill="#ffd479"/>`;
+
+  clockSvg.innerHTML = s;
+  const cap = document.querySelector('.clock-caption');
+  if (cap && cap.textContent !== scale.label) {
+    cap.textContent = scale.label;
+    // Materialise both the caption and the clock face itself so the scale
+    // change is unmistakable (hour → minute → second zoom-ins).
+    for (const el of [cap, clockSvg]) {
+      el.classList.remove('materialize');
+      void el.offsetWidth;
+      el.classList.add('materialize');
+    }
+  }
+}
+
+// ============================================================================
+// Overview bar
+// ============================================================================
+function drawOverview() {
+  const w = 1000, h = 46;
+  const margin = { l: 30, r: 30, t: 10, b: 14 };
+  const innerW = w - margin.l - margin.r;
+  const barY = 14, barH = 12;
+
+  let s = `<defs><linearGradient id="ovGrad" x1="0" x2="1" y1="0" y2="0">
+    <stop offset="0%" stop-color="#3a2868"/>
+    <stop offset="50%" stop-color="#7a3a8a"/>
+    <stop offset="85%" stop-color="#d8634c"/>
+    <stop offset="100%" stop-color="#ffd479"/>
+  </linearGradient></defs>`;
+
+  s += `<g transform="translate(${margin.l},0)">`;
+  s += `<rect x="0" y="${barY}" width="${innerW}" height="${barH}" fill="#0d0d22" rx="4"/>`;
+  s += `<rect x="0" y="${barY}" width="${innerW}" height="${barH}" fill="url(#ovGrad)" fill-opacity="0.25" rx="4"/>`;
+  for (let m = 0; m <= 12; m++) {
+    const x = (m / 12) * innerW;
+    s += `<line x1="${x}" y1="${barY}" x2="${x}" y2="${barY + barH}" class="ov-grid"/>`;
+    if (m < 12) {
+      s += `<text x="${x + (innerW / 12) / 2}" y="${barY + barH + 10}" class="ov-month-label" text-anchor="middle">${MONTH_SHORT[m]}</text>`;
+    }
+  }
+
+  // current guess marker
+  if (state.phase === 'guessing') {
+    const x = currentGuessT() * innerW;
+    s += `<line x1="${x}" y1="${barY - 4}" x2="${x}" y2="${barY + barH + 4}" stroke="#ffd479" stroke-width="2"/>`;
+    s += `<polygon points="${x - 4},${barY - 4} ${x + 4},${barY - 4} ${x},${barY - 1}" fill="#ffd479"/>`;
+  }
+
+  // placed events
+  for (let i = 0; i < state.results.length; i++) {
+    const r = state.results[i];
+    const gx = r.guessT * innerW;
+    const tx = r.event.t * innerW;
+    const isDec31 = (r.event.month === 12 && r.event.day === 31);
+    const truthLabel = r.isTutorial
+      ? `${r.event.name} — given (tutorial): ${formatT(r.event.t, isDec31)} (${formatRealYearsAgo(r.event.t)})`
+      : `${r.event.name} — actual: ${formatT(r.event.t, isDec31)} (${formatRealYearsAgo(r.event.t)})`;
+    if (!r.isTutorial) {
+      const guessLabel = `Your guess for "${r.event.name}": ${formatT(r.guessT, isDec31)} · scored ${r.score}/1000`;
+      s += `<line x1="${Math.min(gx, tx)}" y1="${barY + barH / 2}" x2="${Math.max(gx, tx)}" y2="${barY + barH / 2}" stroke="#444466" stroke-width="1"/>`;
+      s += `<circle cx="${gx}" cy="${barY + barH / 2}" r="4" fill="#ff7a59" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
+           `<title>${escapeHtml(guessLabel)}</title></circle>`;
+    }
+    s += `<circle cx="${tx}" cy="${barY + barH / 2}" r="4" fill="#66e08f" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
+         `<title>${escapeHtml(truthLabel)}</title></circle>`;
+    if (i === state.results.length - 1) {
+      const nm = r.event.name.length > 30 ? r.event.name.slice(0, 28) + '…' : r.event.name;
+      s += `<text x="${tx}" y="${barY - 3}" class="ov-month-label" text-anchor="middle" fill="#66e08f" pointer-events="none">${escapeHtml(nm)}</text>`;
+    }
+  }
+  s += `</g>`;
+  $('overview-svg').innerHTML = s;
+}
+
+// ============================================================================
+// Slider mode handling
+// ============================================================================
+function secondsToHMS(s, sub = false) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  const secF = s % 60;
+  if (sub) {
+    const sInt = Math.floor(secF);
+    const ms = Math.round((secF - sInt) * 1000);
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sInt).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+  }
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(Math.floor(secF)).padStart(2,'0')}`;
+}
+function isFinalSecondEvent(ev) {
+  return !!ev && ev.month === 12 && ev.day === 31 && ev.hour === 23 && ev.min === 59 && ev.sec >= 59;
+}
+function isFinalMinuteEvent(ev) {
+  return !!ev && ev.month === 12 && ev.day === 31 && ev.hour === 23 && ev.min === 59;
+}
+function isFinalHourEvent(ev) {
+  return !!ev && ev.month === 12 && ev.day === 31 && ev.hour === 23;
+}
+// Scale of the clock face for the current event.
+function clockScaleForEvent(ev) {
+  if (!ev || ev.month !== 12 || ev.day !== 31) return null;
+  if (isFinalSecondEvent(ev)) return { kind:'second', start: 86399, span: 1,    ticks: 10, majorEvery: 5,  step: 0.001, label: 'Final cosmic second', labelFn: i => (i / 10).toFixed(1) };
+  if (isFinalMinuteEvent(ev)) return { kind:'minute', start: 86340, span: 60,   ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic minute', labelFn: i => String(i).padStart(2,'0') + 's' };
+  if (isFinalHourEvent(ev))   return { kind:'hour',   start: 82800, span: 3600, ticks: 60, majorEvery: 10, step: 1,     label: 'Final cosmic hour',   labelFn: i => String(i).padStart(2,'0') + 'm' };
+  return                              { kind:'day',    start: 0,    span: 86400,ticks: 24, majorEvery: 6,  step: 1,     label: 'December 31 · 24 hours', labelFn: i => String(i).padStart(2,'0') };
+}
+// The slider anchors to the relevant scale of the *current* event:
+//   • final cosmic second → min is the start of that final second
+//   • elsewhere on Dec 31 → min is the start of Dec 31 (00:00:00)
+//   • day mode (Jan 1 – Dec 30) → min is the previous event's day (chronological)
+function sliderMinForMode(mode) {
+  const ev = currentEvent();
+  const prev = (state.results.length
+                ? state.results[state.results.length - 1].event
+                : null);
+  if (mode === 'time') {
+    // Start from the scale boundary that fits this event.
+    let min = 0;
+    if (isFinalSecondEvent(ev)) min = 86399;
+    else if (isFinalMinuteEvent(ev)) min = 86340;
+    else if (isFinalHourEvent(ev))   min = 82800;
+    // And never let the player guess earlier than the previously placed event
+    // (events are chronological, so the slider must stay >= prev's time).
+    if (prev && prev.month === 12 && prev.day === 31) {
+      min = Math.max(min, prev.hour * 3600 + prev.min * 60 + prev.sec);
+    }
+    return min;
+  }
+  return prev ? dayOfYear(prev.month, prev.day) : 1;
+}
+
+function switchMode(newMode) {
+  state.mode = newMode;
+  if (newMode === 'time') {
+    state.dayValue = 365;
+    const minSec = sliderMinForMode('time');
+    if (state.timeValue < minSec) state.timeValue = minSec;
+    const scale = clockScaleForEvent(currentEvent());
+    const step  = scale ? scale.step : 1;
+    const fine  = step < 1;
+    const maxSec = 86400; // up to the very end of the cosmic year (= now)
+    slider.min = minSec; slider.max = maxSec; slider.step = step;
+    slider.value = state.timeValue;
+    const mid = (minSec + maxSec) / 2;
+    $('slider-min-label').textContent = secondsToHMS(minSec, fine);
+    $('slider-mid-label').textContent = secondsToHMS(mid,    fine);
+    $('slider-max-label').textContent = 'midnight';
+    clockWrap.classList.add('show');
+    vizDiv.classList.add('with-clock');
+  } else {
+    const minDay = sliderMinForMode('day');
+    if (state.dayValue < minDay) state.dayValue = minDay;
+    slider.min = minDay; slider.max = 365; slider.step = 1;
+    slider.value = state.dayValue;
+    $('slider-min-label').textContent = formatT((minDay - 1) / 365, false);
+    $('slider-mid-label').textContent = formatT(((minDay + 365) / 2 - 1) / 365, false);
+    $('slider-max-label').textContent = 'Dec 31';
+    clockWrap.classList.remove('show');
+    vizDiv.classList.remove('with-clock');
+  }
+}
+
+// ============================================================================
+// Readout + master update
+// ============================================================================
+function updateReadout() {
+  const t = currentGuessT();
+  $('readout-date').textContent = formatT(t, state.mode === 'time' || (t >= dateToT(12, 31)));
+  $('readout-ago').textContent  = formatRealYearsAgo(t);
+}
+
+function updateAll() {
+  updateReadout();
+  drawCalendar();
+  drawClock();
+  drawOverview();
+}
+
+// ============================================================================
+// Game flow
+// ============================================================================
+function loadEvent(idx) {
+  const ev = state.events[idx];
+  $('ev-name').textContent     = ev.name;
+  $('ev-counter').textContent  = `${idx + 1} / ${state.events.length}`;
+  state.phase = 'guessing';
+
+  // Tutorial line on the very first round (Big Bang has already been "solved" for the player).
+  const tut = $('tutorial-line');
+  if (idx === 0) tut.classList.add('show');
+  else           tut.classList.remove('show');
+
+  // Auto-pick mode based on the event's scale: Dec 31 events use time-of-day.
+  const wantsTimeMode = (ev.month === 12 && ev.day === 31);
+
+  // Alarming klaxon at every major scale transition (each fires once per game,
+  // and at most one klaxon plays per loadEvent even if several scales activate
+  // simultaneously).
+  let anyAlarm = false;
+  if (wantsTimeMode            && !state.firedTimeAlarm)   { state.firedTimeAlarm   = true; anyAlarm = true; }
+  if (isFinalHourEvent(ev)     && !state.firedHourAlarm)   { state.firedHourAlarm   = true; anyAlarm = true; }
+  if (isFinalMinuteEvent(ev)   && !state.firedMinuteAlarm) { state.firedMinuteAlarm = true; anyAlarm = true; }
+  if (isFinalSecondEvent(ev)   && !state.firedFinalAlarm)  { state.firedFinalAlarm  = true; anyAlarm = true; }
+  if (anyAlarm) soundAlarm();
+
+  // Default the slider to the *previous event's actual moment*. First event: Jan 1 / midnight.
+  const prev = state.results.length ? state.results[state.results.length - 1].event : null;
+  if (wantsTimeMode) {
+    if (prev && prev.month === 12 && prev.day === 31) {
+      state.timeValue = prev.hour * 3600 + prev.min * 60 + prev.sec;
+    } else {
+      state.timeValue = 0;
+    }
+  } else {
+    state.dayValue = prev ? Math.min(365, Math.max(1, dayOfYear(prev.month, prev.day))) : 1;
+  }
+
+  switchMode(wantsTimeMode ? 'time' : 'day');
+  guessBtn.disabled = false;
+  // Wiggle the event name from the second event onwards — keep the very first
+  // appearance calm so the player gets oriented first.
+  if (idx > 0) {
+    const pl = document.querySelector('.prompt-line');
+    if (pl) { pl.classList.remove('materialize'); void pl.offsetWidth; pl.classList.add('materialize'); }
+  }
+  updateAll();
+}
+
+function formatYearsOff(deltaT) {
+  const yearsOff = Math.abs(deltaT) * REAL_YEARS_TOTAL;
+  if (yearsOff < 0.5)     return 'dead on!';
+  if (yearsOff >= 1e9)    return `${(yearsOff / 1e9).toFixed(2)} billion years off`;
+  if (yearsOff >= 1e6)    return `${(yearsOff / 1e6).toFixed(1)} million years off`;
+  if (yearsOff >= 1e3)    return `${(yearsOff / 1e3).toFixed(1)} thousand years off`;
+  return `${Math.round(yearsOff).toLocaleString()} years off`;
+}
+function showScorePopup(score, deltaT) {
+  scorePopup.querySelector('.pop-main').textContent = `+${score}`;
+  scorePopup.querySelector('.pop-sub').textContent  = formatYearsOff(deltaT);
+  scorePopup.classList.toggle('low', score < 400);
+  scorePopup.classList.remove('show');
+  void scorePopup.offsetWidth; // restart animation
+  scorePopup.classList.add('show');
+}
+
+async function loadInfoBox(ev) {
+  const myIdx = state.idx;          // bail out if the user advanced while we awaited
+  infoBox.classList.add('show');
+  infoBox.classList.add('loading');
+  infoImg.classList.add('hidden');
+  infoNoImg.style.display = 'none';
+  infoImg.removeAttribute('src');
+  infoTitle.textContent = ev.name;
+  // Read-more link appended to the end of the description
+  const pageUrl = `https://en.wikipedia.org/wiki/${ev.slug}`;
+  infoDesc.innerHTML = `${escapeHtml(ev.desc || '')} ` +
+    `<a href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia&nbsp;↗</a>`;
+
+  // Guess vs actual block — pulled from the most recent result (skipped for the tutorial)
+  const r = state.results[state.results.length - 1];
+  if (r && r.event === ev && !r.isTutorial) {
+    const isDec31 = (ev.month === 12 && ev.day === 31);
+    const guessCal = formatT(r.guessT, isDec31);
+    const truthCal = formatT(ev.t,     isDec31);
+    $('info-result').innerHTML =
+      `<div class="row guess">
+         <span class="lbl">Your guess</span>
+         <span class="val">${escapeHtml(guessCal)}</span>
+         <span class="ago">${escapeHtml(formatRealYearsAgo(r.guessT))}</span>
+       </div>
+       <div class="row truth">
+         <span class="lbl">Actual</span>
+         <span class="val">${escapeHtml(truthCal)}</span>
+         <span class="ago">${escapeHtml(formatRealYearsAgo(ev.t))}</span>
+       </div>
+       <div class="delta">+${r.score} · ${escapeHtml(formatYearsOff(r.deltaT))}</div>`;
+  } else {
+    $('info-result').innerHTML = '';
+  }
+
+  infoMeta.innerHTML = '';
+
+  const data = await fetchSummary(ev.slug);
+  if (state.idx !== myIdx) return;
+  infoBox.classList.remove('loading');
+  const realPageUrl = data?.content_urls?.desktop?.page || pageUrl;
+  let thumb = data?.thumbnail?.source || data?.originalimage?.source || null;
+  let usingFallback = false;
+  if (!thumb) {
+    thumb = FALLBACK_IMAGE.url;
+    usingFallback = true;
+  }
+  const isCommons = /\/wikipedia\/commons\//.test(thumb);
+
+  infoImg.onerror = () => { infoImg.classList.add('hidden'); infoNoImg.style.display = 'block'; };
+  infoImg.onload  = () => { infoImg.classList.remove('hidden'); infoNoImg.style.display = 'none'; };
+  infoImg.src = thumb;
+
+  if (usingFallback) {
+    infoMeta.innerHTML =
+      `Image: <a href="${escapeHtml(FALLBACK_IMAGE.descriptionUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(FALLBACK_IMAGE.filename)}</a> · ` +
+      `by ${escapeHtml(FALLBACK_IMAGE.artist)} · ` +
+      `<a href="${escapeHtml(FALLBACK_IMAGE.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(FALLBACK_IMAGE.license)}</a> (no thumbnail available for this article)`;
+  } else if (isCommons) {
+    const meta = await fetchImageMeta(thumb);
+    if (state.idx !== myIdx) return;
+    if (meta) {
+      const lic = meta.licenseUrl
+        ? `<a href="${escapeHtml(meta.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(meta.license)}</a>`
+        : escapeHtml(meta.license);
+      infoMeta.innerHTML =
+        `Image: <a href="${escapeHtml(meta.descriptionUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(meta.filename)}</a> · ` +
+        `by ${escapeHtml(meta.artist)} · ${lic}`;
+    } else {
+      infoMeta.innerHTML =
+        `Image from <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>`;
+    }
+  } else {
+    infoMeta.innerHTML =
+      `Image from the <a href="${escapeHtml(realPageUrl)}" target="_blank" rel="noopener noreferrer">Wikipedia article</a> (see source for licence)`;
+  }
+}
+
+// Used when an event's Wikipedia page returns no thumbnail. Hubble Ultra Deep Field — public domain.
+const FALLBACK_IMAGE = {
+  url:            'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Hubble_ultra_deep_field.jpg/320px-Hubble_ultra_deep_field.jpg',
+  filename:       'Hubble Ultra Deep Field',
+  artist:         'NASA / ESA / S. Beckwith (STScI) / HUDF Team',
+  license:        'Public domain',
+  licenseUrl:     'https://en.wikipedia.org/wiki/Public_domain',
+  descriptionUrl: 'https://commons.wikimedia.org/wiki/File:Hubble_ultra_deep_field.jpg',
+};
+
+function reveal() {
+  const ev = currentEvent();
+  const guessT = currentGuessT();
+  // Bounded scoring: the player can only pick within [prev-event-time, now], so
+  // their worst-possible error is bounded by that window. Map error → score
+  // with a slightly steepened (1-norm)^2 curve.
+  let score, deltaT;
+  if (state.mode === 'day') {
+    const minDay   = sliderMinForMode('day');
+    const truthDay = dayOfYear(ev.month, ev.day);
+    const guessDay = state.dayValue;
+    const maxErr   = Math.max(truthDay - minDay, 365 - truthDay) || 1;
+    const norm     = Math.min(1, Math.abs(guessDay - truthDay) / maxErr);
+    score   = Math.max(0, Math.round(1000 * Math.pow(1 - norm, 2)));
+    deltaT  = (guessDay - truthDay) / 365;
+  } else {
+    const minSec   = sliderMinForMode('time');
+    const truthSec = ev.hour * 3600 + ev.min * 60 + ev.sec;
+    const guessSec = state.timeValue;
+    const maxErr   = Math.max(truthSec - minSec, 86400 - truthSec) || 1;
+    const norm     = Math.min(1, Math.abs(guessSec - truthSec) / maxErr);
+    score   = Math.max(0, Math.round(1000 * Math.pow(1 - norm, 2)));
+    deltaT  = (guessSec - truthSec) / COSMIC_YEAR_SECONDS;
+  }
+  state.totalScore += score;
+  state.results.push({ event: ev, guessT, score, deltaT });
+  state.phase = 'revealed';
+
+  $('score-value').textContent = state.totalScore;
+  showScorePopup(score, deltaT);
+  soundChime(score);
+
+  guessBtn.disabled = true;
+  loadInfoBox(ev);
+  updateAll();
+
+  // Auto-advance after a beat — popup finishes (~1.5s), then a brief settle.
+  clearTimeout(state.advanceTimer);
+  state.advanceTimer = setTimeout(autoAdvance, 2400);
+}
+
+function autoAdvance() {
+  state.idx++;
+  if (state.idx >= state.events.length) { showFinalCard(); return; }
+  loadEvent(state.idx);
+}
+
+function showFinalCard() {
+  state.phase = 'done';
+  const max = state.events.length * 1000;
+  const pct = Math.round((state.totalScore / max) * 100);
+  let rank = 'Cosmic dust';
+  if (pct >= 80)      rank = 'Galactic Cartographer';
+  else if (pct >= 60) rank = 'Star-charter';
+  else if (pct >= 40) rank = 'Planet-walker';
+  else if (pct >= 20) rank = 'Comet-rider';
+
+  $('final-line').textContent  = `You placed ${state.events.length} events from the Big Bang to today.`;
+  $('final-score').textContent = `${state.totalScore} / ${max}`;
+  $('final-rank').innerHTML    = `Rank: <strong>${rank}</strong> · ${pct}%`;
+  $('final-card').classList.add('show');
+  $('why-box').classList.add('show');
+
+  // Hide the live controls but keep the calendar, the clock, and the info-box
+  // of the last event on screen so the player can still see what they just placed.
+  $('prompt').style.display     = 'none';
+  $('readout').style.display    = 'none';
+  $('controls').style.display   = 'none';
+  $('button-row').style.display = 'none';
+
+  drawOverview();
+  $('final-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ============================================================================
+// Wire-up
+// ============================================================================
+slider.addEventListener('input', () => {
+  if (state.mode === 'day') state.dayValue  = Math.round(slider.valueAsNumber); // days stay integer
+  else                      state.timeValue = slider.valueAsNumber;
+  if (state.phase === 'guessing') soundTick();
+  updateAll();
+});
+guessBtn.addEventListener('click', () => {
+  if (state.phase !== 'guessing') return;
+  soundClick();
+  reveal();
+});
+function nudge(direction) {
+  if (state.phase !== 'guessing') return;
+  const stepRaw = +slider.step || 1;
+  const delta = direction * stepRaw;
+  const min = +slider.min, max = +slider.max;
+  let next = +slider.value + delta;
+  // floating-point cleanup so successive nudges stay on the step grid
+  if (stepRaw < 1) next = Math.round(next / stepRaw) * stepRaw;
+  next = Math.max(min, Math.min(max, next));
+  if (next === +slider.value) return;
+  slider.value = next;
+  if (state.mode === 'time') state.timeValue = next;
+  else                       state.dayValue  = next;
+  soundTick();
+  updateAll();
+}
+nudgeDown.addEventListener('click', () => nudge(-1));
+nudgeUp  .addEventListener('click', () => nudge(+1));
+// Click-and-hold on the nudge buttons to ramp up the rate of change.
+function holdRepeat(btn, delta) {
+  let tHandle = null, fast = null;
+  const stop = () => { clearTimeout(tHandle); clearInterval(fast); tHandle = fast = null; };
+  btn.addEventListener('mousedown', () => {
+    tHandle = setTimeout(() => { fast = setInterval(() => nudge(delta), 60); }, 350);
+  });
+  ['mouseup','mouseleave','blur','touchend','touchcancel'].forEach(ev => btn.addEventListener(ev, stop));
+}
+holdRepeat(nudgeDown, -1);
+holdRepeat(nudgeUp,   +1);
+function refreshMuteUI() {
+  muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('muted', state.muted);
+  muteBtn.title = state.muted ? 'Unmute' : 'Mute';
+}
+muteBtn.addEventListener('click', () => {
+  state.muted = !state.muted;
+  localStorage.setItem('cosmic-muted', state.muted ? '1' : '0');
+  refreshMuteUI();
+  if (!state.muted) soundClick();
+});
+
+// ============================================================================
+// Boot
+// ============================================================================
+state.events = sampleEvents();
+refreshMuteUI();
+// Big Bang is pre-solved as the tutorial / orientation moment.
+state.results.push({
+  event: TUTORIAL_EVENT,
+  guessT: TUTORIAL_EVENT.t,
+  score: 0,
+  deltaT: 0,
+  isTutorial: true,
+});
+loadInfoBox(TUTORIAL_EVENT);
+loadEvent(0);
+
+// --- Boot intro sequence ---
+// All fadeable sections start with .fade-init in the HTML so they are
+// invisible from frame 0 (no flash of unstyled content). Only the tutorial
+// line is visible. We then add .fade-in to each section in two waves.
+(function introSequence() {
+  const show = sel => { const el = document.querySelector(sel); if (el) el.classList.add('fade-in'); };
+  // t = 2 s: the second tutorial line ("The Big Bang occurred on Jan 1, 00:00 AM.") appears.
+  setTimeout(() => show('#tut-line-2'), 2000);
+  // t = 4 s: the question, counter and first event name appear (no wiggle on this first one).
+  setTimeout(() => {
+    show('.prompt-question-row');
+    show('.prompt-line');
+  }, 4000);
+  // t = 6 s: the rest of the GUI — year overview, calendar, info-box, readout, slider, button.
+  setTimeout(() => {
+    show('.overview');
+    show('#viz');
+    show('#info-box');
+    show('#readout');
+    show('#controls');
+    show('#button-row');
+  }, 6000);
+})();
+</script>
+</body>
+</html>
