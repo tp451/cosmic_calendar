@@ -428,21 +428,22 @@
     opacity: 0;
     font-variant-numeric: tabular-nums;
   }
-  #score-popup .pop-main {
-    font-size: 110px; font-weight: 700;
+  #score-popup .pop-top {
+    font-size: 64px; font-weight: 700;
     color: var(--accent);
     text-shadow: 0 0 30px rgba(255,212,121,0.9), 0 0 60px rgba(255,212,121,0.4);
-    line-height: 1;
+    line-height: 1.05;
   }
-  #score-popup .pop-sub {
-    font-size: 28px; margin-top: 10px; font-weight: 400;
+  #score-popup .pop-bottom {
+    font-size: 36px; margin-top: 10px; font-weight: 600;
     color: var(--ink);
     text-shadow: 0 0 16px rgba(232,232,245,0.5);
     letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
   }
   #score-popup.show { animation: popup 1.5s ease-out forwards; }
-  #score-popup.low  .pop-main { color: var(--bad);  text-shadow: 0 0 30px rgba(255, 107, 107, 0.7); }
-  #score-popup.perfect .pop-main { color: var(--good); text-shadow: 0 0 30px rgba(102, 224, 143, 0.9), 0 0 60px rgba(102, 224, 143, 0.4); }
+  #score-popup.low     .pop-top { color: var(--bad);  text-shadow: 0 0 30px rgba(255, 107, 107, 0.7); }
+  #score-popup.perfect .pop-top { color: var(--good); text-shadow: 0 0 30px rgba(102, 224, 143, 0.9), 0 0 60px rgba(102, 224, 143, 0.4); }
   @keyframes popup {
     0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
     14%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
@@ -558,8 +559,8 @@
     .readout { font-size: 18px; }
     button { padding: 10px 16px; font-size: 12px; }
     /* Smaller popup so the huge +score line never spills off-screen */
-    #score-popup .pop-main { font-size: 64px; }
-    #score-popup .pop-sub  { font-size: 18px; }
+    #score-popup .pop-top    { font-size: 44px; }
+    #score-popup .pop-bottom { font-size: 24px; }
     /* Re-stack the active panel on mobile so the info-box sits BELOW the
        calendar instead of above it. */
     #active-panel { display: flex; flex-direction: column; position: relative; }
@@ -647,13 +648,13 @@
 
     <div class="prompt" id="prompt">
       <div class="tutorial-line show" id="tutorial-line">
-        <div>You are experiencing the final moment of Dec 31.</div>
-        <div class="fade-init" id="tut-line-2">The Big Bang occurred on Jan 1, 00:00 AM.</div>
+        <div>The Big Bang occurred on Jan 1, 00:00 AM.</div>
+        <div class="fade-init" id="tut-line-2">You are experiencing the final moment of Dec 31.</div>
       </div>
       <div class="prompt-question-row fade-init">
         <span></span>
-        <span class="prompt-question">When did this event happen?</span>
-        <span class="counter" id="ev-counter">— / —</span>
+        <span class="prompt-question">When did the following event happen?</span>
+        <span class="counter fade-init" id="ev-counter">— / —</span>
       </div>
       <div class="prompt-line fade-init">
         <span class="name" id="ev-name">—</span>
@@ -673,13 +674,12 @@
       </div>
       <div class="slider-labels">
         <span id="slider-min-label">Jan 1</span>
-        <span id="slider-mid-label"></span>
         <span id="slider-max-label">Dec 31</span>
       </div>
     </div>
 
     <div class="button-row fade-init" id="button-row">
-      <button id="guess-btn">Pinpoint</button>
+      <button id="guess-btn">Submit my guess</button>
     </div>
 
     <div class="viz fade-init" id="viz">
@@ -698,7 +698,7 @@
   by <a href="https://pelzer.blog" target="_blank" rel="noopener noreferrer">Thorben Pelzer</a> via Claude Opus 4.7
 </footer>
 
-<div id="score-popup"><div class="pop-main"></div><div class="pop-sub"></div></div>
+<div id="score-popup"><div class="pop-top"></div><div class="pop-bottom"></div></div>
 
 <script>
 "use strict";
@@ -1671,9 +1671,7 @@ function switchMode(newMode) {
     const maxSec = 86400; // up to the very end of the cosmic year (= now)
     slider.min = minSec; slider.max = maxSec; slider.step = step;
     slider.value = state.timeValue;
-    const mid = (minSec + maxSec) / 2;
     $('slider-min-label').textContent = secondsToHMS(minSec, fine);
-    $('slider-mid-label').textContent = secondsToHMS(mid,    fine);
     $('slider-max-label').textContent = 'midnight';
     clockWrap.classList.add('show');
     vizDiv.classList.add('with-clock');
@@ -1683,7 +1681,6 @@ function switchMode(newMode) {
     slider.min = minDay; slider.max = 365; slider.step = 1;
     slider.value = state.dayValue;
     $('slider-min-label').textContent = formatT((minDay - 1) / 365, false);
-    $('slider-mid-label').textContent = formatT(((minDay + 365) / 2 - 1) / 365, false);
     $('slider-max-label').textContent = 'Dec 31';
     clockWrap.classList.remove('show');
     vizDiv.classList.remove('with-clock');
@@ -1768,8 +1765,8 @@ function formatYearsOff(deltaT) {
   return `${Math.round(yearsOff).toLocaleString()} years off`;
 }
 function showScorePopup(score, deltaT) {
-  scorePopup.querySelector('.pop-main').textContent = `+${score}`;
-  scorePopup.querySelector('.pop-sub').textContent  = formatYearsOff(deltaT);
+  scorePopup.querySelector('.pop-top').textContent    = formatYearsOff(deltaT);
+  scorePopup.querySelector('.pop-bottom').textContent = `+${score} points`;
   scorePopup.classList.toggle('low',     score < 400);
   scorePopup.classList.toggle('perfect', score === 1000);
   scorePopup.classList.remove('show');
@@ -1785,11 +1782,11 @@ async function loadInfoBox(ev) {
   infoNoImg.style.display = 'none';
   infoImg.removeAttribute('src');
   infoTitle.textContent = ev.name;
-  // Cosmic-time "X ago" line just above the title — but skip it for the
-  // Big Bang tutorial card (it would just read "1 cosmic year ago" which is
-  // both confusing and trivially the start of cosmic time).
+  // Cosmic-time "X ago" line just above the title. The Big Bang sits at the
+  // very start of the cosmic year, so we hardcode it to "365 cosmic days ago"
+  // (rather than the computed "1 cosmic year ago", which reads oddly).
   if (ev === TUTORIAL_EVENT) {
-    $('info-cosmic-ago').textContent = '';
+    $('info-cosmic-ago').textContent = '365 cosmic days ago';
   } else {
     const yearsAgoTrue = Math.max(0, (1 - ev.t) * REAL_YEARS_TOTAL);
     $('info-cosmic-ago').textContent = formatCosmicAgo(yearsAgoTrue);
@@ -1828,8 +1825,12 @@ async function loadInfoBox(ev) {
          <span class="ago">${escapeHtml(truthAgo)}</span>
        </div>
        <div class="delta">+${r.score} · ${escapeHtml(formatYearsOff(r.deltaT))}</div>`;
+    $('info-result').style.display = '';
   } else {
+    // Tutorial / no guess yet — hide the whole result box rather than show an
+    // empty dark slab.
     $('info-result').innerHTML = '';
+    $('info-result').style.display = 'none';
   }
 
   infoMeta.innerHTML = '';
@@ -2040,13 +2041,12 @@ loadEvent(0);
   const show = sel => { const el = document.querySelector(sel); if (el) el.classList.add('fade-in'); };
   // t = 2 s: the second tutorial line ("The Big Bang occurred on Jan 1, 00:00 AM.") appears.
   setTimeout(() => show('#tut-line-2'), 2000);
-  // t = 5 s: the question, counter and first event name appear (extra beat so
-  // the player can actually read the Big-Bang line before the GUI keeps unfolding).
-  setTimeout(() => {
-    show('.prompt-question-row');
-    show('.prompt-line');
-  }, 5000);
-  // t = 7 s: the rest of the GUI — year overview, calendar, info-box, readout, slider, button.
+  // t = 5 s: the question appears.
+  setTimeout(() => show('.prompt-question-row'), 5000);
+  // t = 7 s: the first event name appears (2 s after the question).
+  setTimeout(() => show('.prompt-line'),         7000);
+  // t = 9 s: the rest of the GUI — year overview, calendar, info-box,
+  // readout, slider, button, AND the round counter (2 s after the event name).
   setTimeout(() => {
     show('.overview');
     show('#viz');
@@ -2054,7 +2054,8 @@ loadEvent(0);
     show('#readout');
     show('#controls');
     show('#button-row');
-  }, 7000);
+    show('#ev-counter');
+  }, 9000);
 })();
 </script>
 </body>
