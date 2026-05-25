@@ -87,15 +87,15 @@
     min-width: 0;
     overflow-wrap: anywhere;
   }
-  /* Active panel's first visible child is the info-box; tighten the top
-     padding so it sits closer to the year-overview above. */
-  .active { padding-top: 4px; padding-bottom: 8px; }
+  /* (active-panel removed — every section is its own top-level box now) */
 
   h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); font-weight: 600; text-transform: uppercase; }
 
   #overview-svg { width: 100%; height: 46px; display: block; }
 
-  .active .prompt {
+  /* (selector used to be .active .prompt — the .active wrapper is gone,
+     so target the prompt directly.) */
+  .prompt {
     text-align: center;
     margin: 8px auto 4px;
   }
@@ -222,7 +222,7 @@
     align-items: start;
   }
   .viz.with-clock { grid-template-columns: 1fr 240px; }
-  #calendar-svg { width: 100%; height: auto; display: block; background: var(--panel-3); border-radius: 8px; padding: 0; }
+  #calendar-svg { width: 100%; height: auto; display: block; padding: 0; }
   #clock-wrap { display: none; flex-direction: column; align-items: center; gap: 6px; padding: 10px; background: var(--panel-3); border-radius: 8px; }
   #clock-wrap.show { display: flex; }
   #clock-svg { width: 100%; height: auto; max-width: 220px; display: block; }
@@ -353,13 +353,11 @@
   button.secondary:hover:not(:disabled) { background: #22224a; border-color: var(--accent); }
   button.mode-active { background: var(--accent-2); color: #2a0a00; border: none; }
 
+  /* .info-box is now a top-level panel; the .panel class supplies the box
+     look. We only override the bg so the info card reads as a distinct shade. */
   .info-box {
-    display: none;
-    margin-top: 8px;
-    padding: 10px 12px;
+    display: none;        /* hidden until populated */
     background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
   }
   .info-box.show { display: block; }
   .info-top {
@@ -441,7 +439,25 @@
     letter-spacing: 1px;
     font-variant-numeric: tabular-nums;
   }
-  #score-popup.show { animation: popup 1.5s ease-out forwards; }
+  #score-popup.show { animation: popup 2.25s ease-out forwards; }
+  /* Big middle-of-screen announcement that flies to the clock-caption
+     position whenever the cosmic scale changes (Final cosmic day / hour /
+     minute / second). All keyframing is done from JS (WAAPI) because the
+     end position is computed from the live clock-caption rectangle. */
+  #scale-announce {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    font-size: 76px; font-weight: 600;
+    color: var(--accent-2);
+    letter-spacing: 4px; text-transform: uppercase;
+    text-shadow: 0 0 30px rgba(255, 122, 89, 0.75), 0 0 60px rgba(255, 122, 89, 0.35);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 250;
+    white-space: nowrap;
+  }
+  #scale-announce strong { font-weight: 800; }
+  @media (max-width: 720px) { #scale-announce { font-size: 44px; letter-spacing: 2px; } }
   #score-popup.low     .pop-top { color: var(--bad);  text-shadow: 0 0 30px rgba(255, 107, 107, 0.7); }
   #score-popup.perfect .pop-top { color: var(--good); text-shadow: 0 0 30px rgba(102, 224, 143, 0.9), 0 0 60px rgba(102, 224, 143, 0.4); }
   @keyframes popup {
@@ -561,12 +577,14 @@
     /* Smaller popup so the huge +score line never spills off-screen */
     #score-popup .pop-top    { font-size: 44px; }
     #score-popup .pop-bottom { font-size: 24px; }
-    /* Re-stack the active panel on mobile so the info-box sits BELOW the
-       calendar instead of above it. */
-    #active-panel { display: flex; flex-direction: column; position: relative; }
-    #info-box     { order: 99; }
-    /* Counter floats in the top-right corner of the active panel so it never
-       fights the centred question text or wraps onto its own line. */
+    /* On mobile the info-box panel goes BELOW the calendar so the player
+       sees the active GUI first. (Achieved by reordering top-level main
+       children with flex + order.) */
+    main { display: flex; flex-direction: column; }
+    #info-box { order: 99; }
+    /* Counter floats in the top-right corner of the question panel so it
+       never fights the centred question text or wraps onto its own line. */
+    #question-panel { position: relative; }
     .prompt-question-row {
       display: block;
       text-align: center;
@@ -609,47 +627,51 @@
     <svg id="overview-svg" viewBox="0 0 1000 46" preserveAspectRatio="none"></svg>
   </section>
 
-  <section class="panel active" id="active-panel">
-    <div class="info-box fade-init" id="info-box">
-      <div class="info-top">
-        <div class="info-image-wrap">
-          <img id="info-img" alt="">
-          <div id="info-no-image" class="info-no-image" style="display:none">Image loading…</div>
-        </div>
-        <div class="info-text">
-          <div class="info-cosmic-ago" id="info-cosmic-ago"></div>
-          <div class="info-title" id="info-title"></div>
-          <div class="info-desc" id="info-desc"></div>
-          <div class="info-meta" id="info-meta"></div>
-        </div>
+  <!-- Box 2: info / last-event display -->
+  <section class="panel info-box fade-init" id="info-box">
+    <div class="info-top">
+      <div class="info-image-wrap">
+        <img id="info-img" alt="">
+        <div id="info-no-image" class="info-no-image" style="display:none">Image loading…</div>
       </div>
-      <div class="info-result" id="info-result"></div>
-    </div>
-
-    <div class="final-card" id="final-card">
-      <h2>Calendar complete</h2>
-      <div class="rank" id="final-line">—</div>
-      <div class="big" id="final-score">0 / 16000</div>
-      <div class="rank" id="final-rank">—</div>
-      <div class="button-row" style="margin-top:14px">
-        <button onclick="location.reload()">Play again</button>
+      <div class="info-text">
+        <div class="info-cosmic-ago" id="info-cosmic-ago"></div>
+        <div class="info-title" id="info-title"></div>
+        <div class="info-desc" id="info-desc"></div>
+        <div class="info-meta" id="info-meta"></div>
       </div>
     </div>
+    <div class="info-result" id="info-result"></div>
+  </section>
 
-    <div class="why-box" id="why-box">
-      <h3>Why this game?</h3>
-      <p>Carl Sagan introduced the Cosmic Calendar in his 1977 book <em>The Dragons of Eden</em> and popularised it in <em>Cosmos</em> to give people a visceral sense of deep time — that everything we know as human history is squeezed into the last few seconds of a 13.8-billion-year year, and that <strong>the universe was doing perfectly well without us for the other 364 days</strong>.</p>
-      <p>The pace of change at the very end of that calendar keeps accelerating. The steam engine, the railway, and the aeroplane have probably resulted in more change in a century than previous inventions did in a millennium. The world wide web, GPS positioning, the smartphone, streaming, the gig economy, and biometric surveillance: <strong>many of the inventions that impact our life today were not even around when we were born</strong>.<br><br>Machine intelligence is now beginning to reshape work itself, and transform how human minds form, learn and decide. It is becoming hard to tell real from fake; consequential choices are slipping into systems no person controls; and a world of global conflict and personal unease appears to have returned. For most of us the ground feels less solid than it once did — and <strong>the pace may accelerate even further</strong>.</p>
-      <div class="quote">
-        "It's just going to get weirder and weirder and weirder, and finally, it's going to be so weird that people are going to have to talk about how weird it is."
-        <span class="attr">— Terence McKenna (<a href="https://www.youtube.com/watch?v=25HPlSOEGow" target="_blank" rel="noopener noreferrer">video ↗</a>)</span>
-      </div>
+  <!-- End-of-game card (hidden during play) -->
+  <section class="final-card" id="final-card">
+    <h2>Calendar complete</h2>
+    <div class="rank" id="final-line">—</div>
+    <div class="big" id="final-score">0 / 16000</div>
+    <div class="rank" id="final-rank">—</div>
+    <div class="button-row" style="margin-top:14px">
+      <button onclick="location.reload()">Play again</button>
     </div>
+  </section>
 
+  <!-- Why-this-game (hidden during play) -->
+  <section class="why-box" id="why-box">
+    <h3>Why this game?</h3>
+    <p>Carl Sagan introduced the Cosmic Calendar in his 1977 book <em>The Dragons of Eden</em> and popularised it in <em>Cosmos</em> to give people a visceral sense of deep time — that everything we know as human history is squeezed into the last few seconds of a 13.8-billion-year year, and that <strong>the universe was doing perfectly well without us for the other 364 days</strong>.</p>
+    <p>The pace of change at the very end of that calendar keeps accelerating. The steam engine, the railway, and the aeroplane have probably resulted in more change in a century than previous inventions did in a millennium. The world wide web, GPS positioning, the smartphone, streaming, the gig economy, and biometric surveillance: <strong>many of the inventions that impact our life today were not even around when we were born</strong>.<br><br>Machine intelligence is now beginning to reshape work itself, and transform how human minds form, learn and decide. It is becoming hard to tell real from fake; consequential choices are slipping into systems no person controls; and a world of global conflict and personal unease appears to have returned. For most of us the ground feels less solid than it once did — and <strong>the pace may accelerate even further</strong>.</p>
+    <div class="quote">
+      "It's just going to get weirder and weirder and weirder, and finally, it's going to be so weird that people are going to have to talk about how weird it is."
+      <span class="attr">— Terence McKenna (<a href="https://www.youtube.com/watch?v=25HPlSOEGow" target="_blank" rel="noopener noreferrer">video ↗</a>)</span>
+    </div>
+  </section>
+
+  <!-- Box 3: current question + submit -->
+  <section class="panel question-panel" id="question-panel">
     <div class="prompt" id="prompt">
       <div class="tutorial-line show" id="tutorial-line">
-        <div>The Big Bang occurred on Jan 1, 00:00 AM.</div>
-        <div class="fade-init" id="tut-line-2">You are experiencing the final moment of Dec 31.</div>
+        <div>Imagine <strong>the Big Bang</strong> occurred on <strong>January&nbsp;1, 00:00&nbsp;AM</strong>…</div>
+        <div class="fade-init" id="tut-line-2">…and we are now experiencing the final moment of December 31.</div>
       </div>
       <div class="prompt-question-row fade-init">
         <span></span>
@@ -681,14 +703,15 @@
     <div class="button-row fade-init" id="button-row">
       <button id="guess-btn">Submit my guess</button>
     </div>
+  </section>
 
-    <div class="viz fade-init" id="viz">
-      <svg id="calendar-svg" viewBox="0 0 800 320"></svg>
-      <div id="clock-wrap">
-        <div id="scale-history" aria-hidden="true"></div>
-        <svg id="clock-svg" viewBox="0 0 220 220"></svg>
-        <div class="clock-caption">December 31 · 24 hours</div>
-      </div>
+  <!-- Box 4: calendar / clock view -->
+  <section class="panel viz fade-init" id="viz">
+    <svg id="calendar-svg" viewBox="0 0 800 320"></svg>
+    <div id="clock-wrap">
+      <div id="scale-history" aria-hidden="true"></div>
+      <svg id="clock-svg" viewBox="0 0 220 220"></svg>
+      <div class="clock-caption">December 31 · 24 hours</div>
     </div>
   </section>
 
@@ -699,6 +722,7 @@
 </footer>
 
 <div id="score-popup"><div class="pop-top"></div><div class="pop-bottom"></div></div>
+<div id="scale-announce" aria-hidden="true"></div>
 
 <script>
 "use strict";
@@ -913,7 +937,7 @@ const ALL_EVENTS = [
   { name: "Earliest stone tools",                    slug: "Oldowan",                                        desc: "The first deliberately-shaped sharp tools — flakes of stone struck with another stone.",                 month: 12, day: 31, hour: 22, min: 24 },
   { name: "Domestication of fire",                   slug: "Control_of_fire_by_early_humans",                desc: "Early humans learn to start and control fire — for warmth, cooking, and protection.",                    month: 12, day: 31, hour: 23, min: 44 },
   { name: "Anatomically modern humans",              slug: "Anatomically_modern_human",                      desc: "Homo sapiens appears in Africa, looking essentially like us today.",                                     month: 12, day: 31, hour: 23, min: 52 },
-  { name: "Last glacial period begins",              slug: "Last_Glacial_Period",                            desc: "Huge ice sheets advance across the northern continents.",                                                month: 12, day: 31, hour: 23, min: 55 },
+  { name: "Last glacial period begins",              slug: "Last_Glacial_Period",                            desc: "Huge ice sheets advance across the northern continents.",                                                month: 12, day: 31, hour: 23, min: 55, imageOverride: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/IceAgeEarth.jpg/330px-IceAgeEarth.jpg" },
   { name: "First sculptures",                        slug: "Venus_figurines",                                desc: "Humans begin to carve small figurines from bone, ivory and stone.",                                      month: 12, day: 31, hour: 23, min: 58 },
   { name: "First cave paintings",                    slug: "Cave_painting",                                  desc: "People begin to paint animals and hands on the walls of deep caves.",                                    month: 12, day: 31, hour: 23, min: 58 },
   // Final-minute events — sec is an integer cosmic second (slider step = 1
@@ -923,11 +947,11 @@ const ALL_EVENTS = [
   // coarse cosmic position.
   { name: "Invention of agriculture",                slug: "Agriculture",                                    desc: "People stop wandering and begin to farm wheat, barley, and rice.",                                       month: 12, day: 31, hour: 23, min: 59, sec: 32, historicalYear: -10000 },
   { name: "End of the last Ice Age",                 slug: "Holocene",                                       desc: "The ice sheets retreat, sea levels rise, the climate becomes mild.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 33, historicalYear:  -9700 },
-  { name: "Flooding of Doggerland",                  slug: "Doggerland",                                     desc: "Rising seas swallow the land bridge that once joined Britain to mainland Europe.",                       month: 12, day: 31, hour: 23, min: 59, sec: 41, historicalYear:  -6200 },
+  { name: "Doggerland (Britain–Europe land bridge) is flooded", slug: "Doggerland",                          desc: "Rising seas swallow the land bridge that once joined Britain to mainland Europe.",                       month: 12, day: 31, hour: 23, min: 59, sec: 41, historicalYear:  -6200 },
   { name: "Chalcolithic (copper-stone age) begins",  slug: "Copper",                                         desc: "People start working with copper alongside their stone tools — the first metal era.",                    month: 12, day: 31, hour: 23, min: 59, sec: 45, historicalYear:  -4500 },
   { name: "Early Bronze Age begins",                 slug: "Bronze_Age",                                     desc: "People begin smelting tin and copper into bronze, the first useful alloy.",                              month: 12, day: 31, hour: 23, min: 59, sec: 47, historicalYear:  -3300 },
   { name: "Proto-writing",                           slug: "Proto-writing",                                  desc: "The first symbol systems begin to record numbers, goods and names.",                                     month: 12, day: 31, hour: 23, min: 59, sec: 47, historicalYear:  -3500 },
-  { name: "Early Egyptian dynasties",                slug: "Early_Dynastic_Period_(Egypt)",                  desc: "Upper and Lower Egypt unite under the first pharaohs along the Nile.",                                   month: 12, day: 31, hour: 23, min: 59, sec: 48, historicalYear:  -3100 },
+  { name: "Early Egyptian dynasties",                slug: "Narmer_Palette",                                 desc: "Upper and Lower Egypt unite under the first pharaohs along the Nile. The Narmer Palette commemorates the unification.", month: 12, day: 31, hour: 23, min: 59, sec: 48, historicalYear:  -3100 },
   { name: "Indus Valley civilisation",               slug: "Indus_Valley_Civilisation",                      desc: "Planned cities rise along the Indus river, with sewers, baths and standardised bricks.",                 month: 12, day: 31, hour: 23, min: 59, sec: 49, historicalYear:  -2600 },
   { name: "Akkadian Empire",                         slug: "Akkadian_Empire",                                desc: "Sargon of Akkad welds Mesopotamian city-states into the world's first empire.",                          month: 12, day: 31, hour: 23, min: 59, sec: 50, historicalYear:  -2334 },
   { name: "First alphabets",                         slug: "Proto-Sinaitic_script",                          desc: "Symbols begin standing for individual sounds rather than whole words.",                                  month: 12, day: 31, hour: 23, min: 59, sec: 51, historicalYear:  -1850 },
@@ -942,7 +966,7 @@ const ALL_EVENTS = [
   { name: "Jesus is born",                           slug: "Jesus",                                          desc: "A Jewish preacher is born in Roman-occupied Judea. The movement around him becomes Christianity.",        month: 12, day: 31, hour: 23, min: 59, sec: 55, historicalYear:     -4 },
   { name: "Invention of zero",                       slug: "Bakhshali_manuscript",                           desc: "Indian mathematicians give the number zero its modern form, transforming arithmetic.",                   month: 12, day: 31, hour: 23, min: 59, sec: 56, historicalYear:    300 },
   { name: "Muhammad is born",                        slug: "Muhammad",                                       desc: "Muhammad is born in Mecca. He will found Islam, which spreads rapidly across three continents.",          month: 12, day: 31, hour: 23, min: 59, sec: 56, historicalYear:    570 },
-  { name: "Maya civilisation peaks",                 slug: "Maya_civilization",                              desc: "The classic Maya build vast stone cities, hieroglyphic writing and precise astronomy.",                  month: 12, day: 31, hour: 23, min: 59, sec: 57, historicalYear:    750 },
+  { name: "Maya civilisation peaks",                 slug: "Maya_civilization",                              desc: "The classic Maya build vast stone cities, hieroglyphic writing and precise astronomy.",                  month: 12, day: 31, hour: 23, min: 59, sec: 57, historicalYear:    750, imageOverride: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Tikal_3.jpg/330px-Tikal_3.jpg" },
   { name: "Mongol Empire founded",                   slug: "Mongol_Empire",                                  desc: "Genghis Khan unites the steppe tribes; his successors build the largest contiguous empire in history.",  month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1206 },
   { name: "European Renaissance begins",             slug: "Renaissance",                                    desc: "Art, science and humanist thought blossom across Italy and then all of Europe.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1450 },
   { name: "Modern period of history begins",         slug: "Age_of_Discovery",                               desc: "Printing presses, gunpowder, global navigation — the modern world takes shape.",                         month: 12, day: 31, hour: 23, min: 59, sec: 58, historicalYear:   1492 },
@@ -954,7 +978,7 @@ const ALL_EVENTS = [
   { name: "Steam engine (Watt)",                     slug: "Watt_steam_engine",                              desc: "James Watt patents the separate-condenser steam engine — the workhorse of the Industrial Revolution.",    month: 12, day: 31, hour: 23, min: 59, sec: 60 - 257 / 437.5, historicalYear: 1769 },
   { name: "Railway era begins",                      slug: "Locomotion_No._1",                               desc: "The Stockton & Darlington Railway opens — the first public line worked by steam locomotives. This is Locomotion No. 1, the engine that pulled it.", month: 12, day: 31, hour: 23, min: 59, sec: 60 - 201 / 437.5, historicalYear: 1825 },
   { name: "Telephone invented",                      slug: "Telephone",                                      desc: "Alexander Graham Bell patents the telephone — voice can suddenly travel any distance.",                   month: 12, day: 31, hour: 23, min: 59, sec: 60 - 150 / 437.5, historicalYear: 1876 },
-  { name: "First powered flight",                    slug: "Wright_brothers",                                desc: "The Wright Brothers fly the first heavier-than-air powered aircraft at Kitty Hawk.",                      month: 12, day: 31, hour: 23, min: 59, sec: 60 - 123 / 437.5, historicalYear: 1903 },
+  { name: "First powered flight",                    slug: "Wright_brothers",                                desc: "The Wright Brothers fly the first heavier-than-air powered aircraft at Kitty Hawk.",                      month: 12, day: 31, hour: 23, min: 59, sec: 60 - 123 / 437.5, historicalYear: 1903, imageOverride: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Wright_First_Flight_1903Dec17_%28full_restore_115%29.jpg/330px-Wright_First_Flight_1903Dec17_%28full_restore_115%29.jpg" },
   { name: "First programmable computer (Zuse Z3)",   slug: "Z3_(computer)",                                  desc: "Konrad Zuse completes the Z3 in Berlin: the first working programmable, fully automatic digital computer.", month: 12, day: 31, hour: 23, min: 59, sec: 60 -  85 / 437.5, historicalYear: 1941, required: true },
   { name: "Apollo 11 — humans land on the Moon",     slug: "Apollo_11",                                      desc: "Neil Armstrong and Buzz Aldrin set foot on another world; the first time any human has left Earth.",      month: 12, day: 31, hour: 23, min: 59, sec: 60 -  57 / 437.5, historicalYear: 1969 },
   { name: "Internet (TCP/IP) is born",               slug: "Internet",                                       desc: "ARPANET adopts TCP/IP, turning a research network of computers into a single global one.",                month: 12, day: 31, hour: 23, min: 59, sec: 60 -  43 / 437.5, historicalYear: 1983 },
@@ -1087,8 +1111,12 @@ function playTone(freq, duration, type='sine', volume=0.06, delay=0) {
 }
 function soundClick()   { playTone(560, 0.06, 'triangle', 0.04); }
 function soundTick()    { playTone(880, 0.02, 'triangle', 0.02); }
-function soundChime(score) {
-  const base = 392 + (score / 1000) * 200; // G4 → ~D5
+// `ramp` ∈ [0..1] — how far through the game we are. The base pitch is
+// derived ONLY from ramp (not from score), so a poor guess at event N can
+// never sound lower than a perfect guess at event N-1; the chime is always
+// climbing. Score influences extra overtones / loudness, not the base note.
+function soundChime(score, ramp = 0) {
+  const base = 392 * Math.pow(2, ramp);           // G4 → G5 monotonically across the game
   playTone(base,        0.18, 'sine', 0.07, 0);
   playTone(base * 1.25, 0.22, 'sine', 0.07, 0.09);
   if (score >= 700) playTone(base * 1.5, 0.28, 'sine', 0.06, 0.20);
@@ -1463,7 +1491,34 @@ function drawClock() {
       el.classList.add('materialize');
     }
     drawScaleHistory(scale);
+    // Big middle-of-screen announce that flies down to the clock-caption.
+    announceScaleChange(scale.label);
   }
+}
+
+// Animate a big overlay of the new scale label: appears in the centre of the
+// viewport, holds briefly, then translates to land on the actual clock-caption
+// position (its "correct" position) while fading out.
+function announceScaleChange(labelHtml) {
+  const ann = document.getElementById('scale-announce');
+  const target = document.querySelector('.clock-caption');
+  if (!ann || !target) return;
+  ann.innerHTML = labelHtml;
+  // Force layout so we can read the caption's current rectangle.
+  const tRect = target.getBoundingClientRect();
+  const tx = (tRect.left + tRect.width  / 2) - (window.innerWidth  / 2);
+  const ty = (tRect.top  + tRect.height / 2) - (window.innerHeight / 2);
+  ann.animate([
+    { opacity: 0,    transform: `translate(-50%, -50%) scale(0.5)`,                                                                       offset: 0    },
+    { opacity: 1,    transform: `translate(-50%, -50%) scale(1.15)`,                                                                      offset: 0.15 },
+    { opacity: 1,    transform: `translate(-50%, -50%) scale(1)`,                                                                         offset: 0.45 },
+    { opacity: 0.55, transform: `translate(calc(-50% + ${tx * 0.55}px), calc(-50% + ${ty * 0.55}px)) scale(0.65)`,                        offset: 0.78 },
+    { opacity: 0,    transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.35)`,                                      offset: 1    },
+  ], {
+    duration: 2400,
+    easing: 'cubic-bezier(0.5, 0, 0.3, 1)',
+    fill: 'forwards',
+  });
 }
 
 // Tiny "you've zoomed past these scales" badges. Day appears once we're past
@@ -1575,27 +1630,77 @@ function drawOverview() {
     s += `<polygon points="${x - 4},${barY - 4} ${x + 4},${barY - 4} ${x},${barY - 1}" fill="#ffd479"/>`;
   }
 
-  // placed events
+  // placed events — build a dots list first, then run a small force-directed
+  // repel pass so overlapping markers spread vertically (and a touch
+  // horizontally) instead of stacking on top of each other.
+  const midY  = barY + barH / 2;
+  const yMin  = 3;                       // top of SVG (height 46)
+  const yMax  = barY + barH + 10;        // just past month labels but inside SVG
+  const dots  = [];
   for (let i = 0; i < state.results.length; i++) {
     const r = state.results[i];
-    const gx = r.guessT * innerW;
     const tx = r.event.t * innerW;
+    dots.push({ kind: 'truth', resultIdx: i, origX: tx, x: tx, y: midY });
+    if (!r.isTutorial) {
+      const gx = r.guessT * innerW;
+      dots.push({ kind: 'guess', resultIdx: i, origX: gx, x: gx, y: midY });
+    }
+  }
+  // Nudge coincident dots so the repel pass has a direction to work with.
+  for (let i = 0; i < dots.length; i++) {
+    for (let j = i + 1; j < dots.length; j++) {
+      if (Math.abs(dots[i].x - dots[j].x) < 0.01 && Math.abs(dots[i].y - dots[j].y) < 0.01) {
+        dots[j].y += (j % 2 === 0 ? 0.6 : -0.6);
+      }
+    }
+  }
+  const minDist  = 9;     // 2 × radius (4) + a 1px gap
+  const maxXDrift = 3;    // how far a dot is allowed to slide left/right from its true x — keep dots close to true cosmic position
+  for (let iter = 0; iter < 80; iter++) {
+    let moved = false;
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const dx = dots[j].x - dots[i].x;
+        const dy = dots[j].y - dots[i].y;
+        const dist = Math.hypot(dx, dy);
+        if (dist >= minDist || dist === 0) continue;
+        const overlap = minDist - dist;
+        const nx = dx / dist, ny = dy / dist;
+        // strongly bias the push vertically — horizontal x must stay accurate
+        dots[i].x -= nx * overlap * 0.10;
+        dots[i].y -= ny * overlap * 0.55;
+        dots[j].x += nx * overlap * 0.10;
+        dots[j].y += ny * overlap * 0.55;
+        // clamp y inside the SVG
+        dots[i].y = Math.max(yMin, Math.min(yMax, dots[i].y));
+        dots[j].y = Math.max(yMin, Math.min(yMax, dots[j].y));
+        // limit x drift so the dot stays near its true cosmic-time position
+        dots[i].x = Math.max(dots[i].origX - maxXDrift, Math.min(dots[i].origX + maxXDrift, dots[i].x));
+        dots[j].x = Math.max(dots[j].origX - maxXDrift, Math.min(dots[j].origX + maxXDrift, dots[j].x));
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  // Render
+  const dotByKey = new Map();
+  dots.forEach(d => dotByKey.set(`${d.resultIdx}:${d.kind}`, d));
+  for (let i = 0; i < state.results.length; i++) {
+    const r = state.results[i];
+    const truthDot = dotByKey.get(`${i}:truth`);
+    const guessDot = dotByKey.get(`${i}:guess`);
     const isDec31 = (r.event.month === 12 && r.event.day === 31);
     const truthLabel = r.isTutorial
       ? `${r.event.name} — given (tutorial): ${formatT(r.event.t, isDec31)} (${formatRealYearsAgo(r.event.t)})`
       : `${r.event.name} — actual: ${formatT(r.event.t, isDec31)} (${formatRealYearsAgo(r.event.t)})`;
-    if (!r.isTutorial) {
+    if (!r.isTutorial && guessDot) {
       const guessLabel = `Your guess for "${r.event.name}": ${formatT(r.guessT, isDec31)} · scored ${r.score}/1000`;
-      s += `<line x1="${Math.min(gx, tx)}" y1="${barY + barH / 2}" x2="${Math.max(gx, tx)}" y2="${barY + barH / 2}" stroke="#444466" stroke-width="1"/>`;
-      s += `<circle cx="${gx}" cy="${barY + barH / 2}" r="4" fill="#ff7a59" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
+      s += `<line x1="${guessDot.x.toFixed(2)}" y1="${guessDot.y.toFixed(2)}" x2="${truthDot.x.toFixed(2)}" y2="${truthDot.y.toFixed(2)}" stroke="#444466" stroke-width="1"/>`;
+      s += `<circle cx="${guessDot.x.toFixed(2)}" cy="${guessDot.y.toFixed(2)}" r="4" fill="#ff7a59" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
            `<title>${escapeHtml(guessLabel)}</title></circle>`;
     }
-    s += `<circle cx="${tx}" cy="${barY + barH / 2}" r="4" fill="#66e08f" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
+    s += `<circle cx="${truthDot.x.toFixed(2)}" cy="${truthDot.y.toFixed(2)}" r="4" fill="#66e08f" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
          `<title>${escapeHtml(truthLabel)}</title></circle>`;
-    if (i === state.results.length - 1) {
-      const nm = r.event.name.length > 30 ? r.event.name.slice(0, 28) + '…' : r.event.name;
-      s += `<text x="${tx}" y="${barY - 3}" class="ov-month-label" text-anchor="middle" fill="#66e08f" pointer-events="none">${escapeHtml(nm)}</text>`;
-    }
   }
   s += `</g>`;
   $('overview-svg').innerHTML = s;
@@ -1839,7 +1944,11 @@ async function loadInfoBox(ev) {
   if (state.idx !== myIdx) return;
   infoBox.classList.remove('loading');
   const realPageUrl = data?.content_urls?.desktop?.page || pageUrl;
-  let thumb = data?.thumbnail?.source || data?.originalimage?.source || null;
+  // Hand-picked image override beats whatever the page summary returns.
+  let thumb = ev.imageOverride
+             || data?.thumbnail?.source
+             || data?.originalimage?.source
+             || null;
   let usingFallback = false;
   if (!thumb) {
     thumb = FALLBACK_IMAGE.url;
@@ -1916,15 +2025,16 @@ function reveal() {
 
   $('score-value').textContent = state.totalScore;
   showScorePopup(score, deltaT);
-  soundChime(score);
+  const ramp = state.events.length > 1 ? state.idx / (state.events.length - 1) : 0;
+  soundChime(score, ramp);
 
   guessBtn.disabled = true;
   loadInfoBox(ev);
   updateAll();
 
-  // Auto-advance after a beat — popup finishes (~1.5s), then a brief settle.
+  // Auto-advance after a beat — popup finishes (~2.25s), then a brief settle.
   clearTimeout(state.advanceTimer);
-  state.advanceTimer = setTimeout(autoAdvance, 2400);
+  state.advanceTimer = setTimeout(autoAdvance, 3150);
 }
 
 function autoAdvance() {
@@ -1950,13 +2060,10 @@ function showFinalCard() {
   $('why-box').classList.add('show');
   soundComplete();
 
-  // Hide the live controls AND the calendar/clock so the score card and
-  // why-box are the only focus. The info-box of the last event remains visible.
-  $('prompt').style.display     = 'none';
-  $('readout').style.display    = 'none';
-  $('controls').style.display   = 'none';
-  $('button-row').style.display = 'none';
-  $('viz').style.display        = 'none';
+  // Hide the question panel AND the calendar/clock panel so the score card
+  // and why-box are the only focus. The info-box panel (last event) stays.
+  $('question-panel').style.display = 'none';
+  $('viz').style.display            = 'none';
 
   drawOverview();
   $('final-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
