@@ -457,7 +457,8 @@
     white-space: nowrap;
   }
   #scale-announce strong { font-weight: 800; }
-  @media (max-width: 720px) { #scale-announce { font-size: 44px; letter-spacing: 2px; } }
+  @media (max-width: 720px) { #scale-announce { font-size: 32px; letter-spacing: 1px; } }
+  @media (max-width: 400px) { #scale-announce { font-size: 26px; letter-spacing: 1px; } }
   #score-popup.low     .pop-top { color: var(--bad);  text-shadow: 0 0 30px rgba(255, 107, 107, 0.7); }
   #score-popup.perfect .pop-top { color: var(--good); text-shadow: 0 0 30px rgba(102, 224, 143, 0.9), 0 0 60px rgba(102, 224, 143, 0.4); }
   @keyframes popup {
@@ -1655,7 +1656,7 @@ function drawOverview() {
     }
   }
   const minDist  = 9;     // 2 × radius (4) + a 1px gap
-  const maxXDrift = 3;    // how far a dot is allowed to slide left/right from its true x — keep dots close to true cosmic position
+  const maxXDrift = 2;    // how far a dot is allowed to slide left/right from its true x — keep dots close to true cosmic position
   for (let iter = 0; iter < 80; iter++) {
     let moved = false;
     for (let i = 0; i < dots.length; i++) {
@@ -1667,9 +1668,9 @@ function drawOverview() {
         const overlap = minDist - dist;
         const nx = dx / dist, ny = dy / dist;
         // strongly bias the push vertically — horizontal x must stay accurate
-        dots[i].x -= nx * overlap * 0.10;
+        dots[i].x -= nx * overlap * 0.08;
         dots[i].y -= ny * overlap * 0.55;
-        dots[j].x += nx * overlap * 0.10;
+        dots[j].x += nx * overlap * 0.08;
         dots[j].y += ny * overlap * 0.55;
         // clamp y inside the SVG
         dots[i].y = Math.max(yMin, Math.min(yMax, dots[i].y));
@@ -1695,7 +1696,12 @@ function drawOverview() {
       : `${r.event.name} — actual: ${formatT(r.event.t, isDec31)} (${formatRealYearsAgo(r.event.t)})`;
     if (!r.isTutorial && guessDot) {
       const guessLabel = `Your guess for "${r.event.name}": ${formatT(r.guessT, isDec31)} · scored ${r.score}/1000`;
-      s += `<line x1="${guessDot.x.toFixed(2)}" y1="${guessDot.y.toFixed(2)}" x2="${truthDot.x.toFixed(2)}" y2="${truthDot.y.toFixed(2)}" stroke="#444466" stroke-width="1"/>`;
+      // Only draw the connector when both dots remain on the centerline (no repel displacement).
+      // Once repel pushes a dot off-axis, the diagonal connectors get tangled & ugly in dense clusters.
+      const onCenter = Math.abs(guessDot.y - midY) < 0.5 && Math.abs(truthDot.y - midY) < 0.5;
+      if (onCenter) {
+        s += `<line x1="${guessDot.x.toFixed(2)}" y1="${midY}" x2="${truthDot.x.toFixed(2)}" y2="${midY}" stroke="#444466" stroke-width="1"/>`;
+      }
       s += `<circle cx="${guessDot.x.toFixed(2)}" cy="${guessDot.y.toFixed(2)}" r="4" fill="#ff7a59" stroke="#fff8" stroke-width="0.8" style="cursor:help">` +
            `<title>${escapeHtml(guessLabel)}</title></circle>`;
     }
